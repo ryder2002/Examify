@@ -1,0 +1,6 @@
+; Do not commit real secrets. Generate SCRAM verifiers on the PostgreSQL VM.
+; PgBouncer accepts plain passwords here, but SCRAM verifiers are preferred.
+"postgres" "SCRAM-SHA-256-REPLACE_WITH_pg_authid_rolpassword"
+"examify_app" "SCRAM-SHA-256-REPLACE_WITH_pg_authid_rolpassword"
+"pgbouncer_admin" "SCRAM-SHA-256-REPLACE_WITH_A_SEPARATE_ADMIN_SECRET"
+"pgbouncer_stats" "SCRAM-SHA-256-REPLACE_WITH_A_SEPARATE_STATS_SECRET"

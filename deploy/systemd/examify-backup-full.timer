@@ -1,0 +1,11 @@
+[Unit]
+Description=Weekly Examify full backup
+
+[Timer]
+OnCalendar=Sun *-*-* 02:10:00 UTC
+Persistent=true
+RandomizedDelaySec=10m
+Unit=examify-backup@full.service
+
+[Install]
+WantedBy=timers.target

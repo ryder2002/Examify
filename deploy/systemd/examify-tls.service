@@ -1,0 +1,19 @@
+[Unit]
+Description=Examify production Compose stack with nginx TLS
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+Conflicts=examify.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/opt/examify
+ExecStart=/usr/bin/docker compose -f compose.yaml -f compose.tls.yaml up -d
+ExecStartPost=/opt/examify/deploy/pgbackrest-init.sh
+ExecStop=/usr/bin/docker compose -f compose.yaml -f compose.tls.yaml stop
+TimeoutStartSec=0
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target

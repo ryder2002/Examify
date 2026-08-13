@@ -1,0 +1,11 @@
+[Unit]
+Description=Check Examify TLS renewal twice daily
+
+[Timer]
+OnCalendar=*-*-* 00,12:20:00 UTC
+Persistent=true
+RandomizedDelaySec=30m
+Unit=examify-certbot-renew.service
+
+[Install]
+WantedBy=timers.target

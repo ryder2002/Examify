@@ -1,0 +1,3 @@
+# Tesseract OCR is CPU-based and does not require a CUDA/ONNX runtime wheel.
+# Keep this file as an explicit no-extra-dependency marker for deployment
+# scripts that probe for an optional NVIDIA requirements file.

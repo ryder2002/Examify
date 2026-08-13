@@ -1,0 +1,47 @@
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Python virtual environments and caches
+**/.venv/
+**/venv/
+**/__pycache__/
+**/*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.pyre/
+
+# Node / frontend generated files
+node_modules/
+.npm/
+.next/
+out/
+dist/
+build/
+coverage/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# IDE/editor files
+.vscode/
+.idea/
+
+# Large document and asset files that are not source code
+*.pdf
+*.docx
+*.pptx
+*.xlsx
+*.zip
+*.tar
+*.gz
+
+# Local generated docs used only in this environment
+LC.pdf
+RC.pdf
+Giai_Chi_Tiet/*.docx

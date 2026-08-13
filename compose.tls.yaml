@@ -1,0 +1,16 @@
+services:
+  nginx:
+    ports:
+      - "${HTTPS_PORT:-443}:443"
+    volumes:
+      - ./deploy/nginx-tls.conf:/etc/nginx/conf.d/default.conf:ro
+      - certbot_webroot:/var/www/certbot:ro
+      - letsencrypt_data:/etc/letsencrypt:ro
+
+  certbot:
+    image: certbot/certbot:v5.7.0
+    profiles: [tls]
+    volumes:
+      - certbot_webroot:/var/www/certbot
+      - letsencrypt_data:/etc/letsencrypt
+    networks: [public]

@@ -1,0 +1,5 @@
+-r requirements-base.txt
+# Keep a wheel-based release so the Windows installer does not need a Rust
+# toolchain or a compiler during sidecar packaging.
+cryptography==44.0.3
+pyinstaller==6.14.2

@@ -1,0 +1,19 @@
+[Unit]
+Description=Examify production Compose stack
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+Conflicts=examify-tls.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/opt/examify
+ExecStart=/usr/bin/docker compose up -d
+ExecStartPost=/opt/examify/deploy/pgbackrest-init.sh
+ExecStop=/usr/bin/docker compose stop
+TimeoutStartSec=0
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target

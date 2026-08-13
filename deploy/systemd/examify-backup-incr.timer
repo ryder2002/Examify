@@ -1,0 +1,11 @@
+[Unit]
+Description=Six-hourly Examify incremental backup
+
+[Timer]
+OnCalendar=*-*-* 00,06,12,18:10:00 UTC
+Persistent=true
+RandomizedDelaySec=5m
+Unit=examify-backup@incr.service
+
+[Install]
+WantedBy=timers.target

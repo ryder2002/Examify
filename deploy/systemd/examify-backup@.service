@@ -1,0 +1,12 @@
+[Unit]
+Description=Examify pgBackRest %i backup and verification
+After=examify.service examify-tls.service
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=/opt/examify
+ExecStart=/opt/examify/deploy/pgbackrest-backup.sh %i
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7

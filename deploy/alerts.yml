@@ -1,0 +1,111 @@
+groups:
+  - name: examify-production
+    rules:
+      - alert: ApiHighErrorRate
+        expr: |
+          sum(rate(examify_http_requests_total{status=~"5.."}[5m]))
+          / clamp_min(sum(rate(examify_http_requests_total[5m])), 0.001) > 0.005
+        for: 5m
+        labels: { severity: critical }
+        annotations:
+          summary: "API 5xx vượt 0,5% trong 5 phút"
+
+      - alert: ApiHotRouteSlow
+        expr: |
+          histogram_quantile(0.95,
+            sum by (le, route) (rate(examify_http_request_duration_seconds_bucket[5m]))
+          ) > 0.3
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: "API p95 vượt 300 ms trên route {{ $labels.route }}"
+
+      - alert: DatabasePoolSaturated
+        expr: |
+          sum(examify_db_pool_checked_out)
+          / clamp_min(sum(examify_db_pool_size), 1) > 0.8
+        for: 5m
+        labels: { severity: critical }
+        annotations:
+          summary: "SQLAlchemy pool sử dụng trên 80%"
+
+      - alert: PostgreSQLConnectionsHigh
+        expr: sum(pg_stat_activity_count) > 60
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          summary: "PostgreSQL có trên 60 connection"
+
+      - alert: PostgreSQLTransactionTooLong
+        expr: pg_long_running_transactions_oldest_timestamp_seconds > 5
+        for: 1m
+        labels: { severity: critical }
+        annotations:
+          summary: "PostgreSQL có transaction kéo dài trên 5 giây"
+
+      - alert: PostgreSQLWalArchiveDelayed
+        expr: pg_stat_archiver_last_archive_age > 360
+        for: 5m
+        labels: { severity: critical }
+        annotations:
+          summary: "WAL archive không tiến triển trong hơn 6 phút"
+
+      - alert: PostgreSQLWalArchiveFailed
+        expr: increase(pg_stat_archiver_failed_count[5m]) > 0
+        labels: { severity: critical }
+        annotations:
+          summary: "PostgreSQL WAL archive vừa thất bại"
+
+      - alert: HostCpuHigh
+        expr: 1 - avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) > 0.70
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: "CPU host duy trì trên 70%"
+
+      - alert: HostMemoryHigh
+        expr: 1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes > 0.80
+        for: 5m
+        labels: { severity: critical }
+        annotations:
+          summary: "RAM host sử dụng trên 80%"
+
+      - alert: HostNetworkSaturated
+        expr: |
+          sum(rate(node_network_transmit_bytes_total{device!~"lo|veth.*|docker.*|br-.*"}[5m]))
+          > 75000000
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: "Outbound network duy trì trên khoảng 60% uplink 1 Gbps"
+
+      - alert: HostDiskWarning
+        expr: |
+          1 - node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"}
+          / node_filesystem_size_bytes{fstype!~"tmpfs|overlay"} > 0.75
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: "Disk {{ $labels.mountpoint }} sử dụng trên 75%"
+
+      - alert: HostDiskCritical
+        expr: |
+          1 - node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"}
+          / node_filesystem_size_bytes{fstype!~"tmpfs|overlay"} > 0.85
+        for: 5m
+        labels: { severity: critical }
+        annotations:
+          summary: "Disk {{ $labels.mountpoint }} sử dụng trên 85%"
+
+      - alert: RedisRejectedConnections
+        expr: increase(redis_rejected_connections_total[5m]) > 0
+        labels: { severity: critical }
+        annotations:
+          summary: "Redis đã từ chối connection"
+
+      - alert: MinioUnavailable
+        expr: up{job="minio"} == 0
+        for: 2m
+        labels: { severity: critical }
+        annotations:
+          summary: "Prometheus không scrape được MinIO"
