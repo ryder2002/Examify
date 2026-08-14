@@ -528,7 +528,17 @@ def persist_final_exam(
             exam.client_exam_id = client_exam_id
         exam.title = title or exam.title
         if exam.library_scope == "teacher_shared":
-            title_key = teacher_scoped_title_key(owner_user_id, exam.title)
+            # A title is unique only inside one Teacher + Tag catalogue. This
+            # permits ``TEST 1`` under 2018 and 2019 while preserving the
+            # duplicate guard for the same tag.
+            category_for_key = (
+                " ".join(
+                    (category if category is not None else (exam.category or "")).split()
+                )
+            )
+            title_key = teacher_scoped_title_key(
+                owner_user_id, exam.title, category_for_key
+            )
             if not title_key:
                 raise HTTPException(status_code=422, detail="Tên đề không được để trống")
             duplicate = session.scalar(

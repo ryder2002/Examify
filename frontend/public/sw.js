@@ -1,4 +1,4 @@
-const CACHE_VERSION = "examify-pwa-v7";
+const CACHE_VERSION = "examify-pwa-v8-icons-transparent";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const PAGE_CACHE = `${CACHE_VERSION}-pages`;
 const OFFLINE_ASSET_CACHE = "examify-offline-assets-v1";

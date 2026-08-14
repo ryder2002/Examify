@@ -143,13 +143,15 @@ QUESTION_START = re.compile(
     # the marker (for example ``186.What``).  The marker is line-anchored so
     # allowing zero whitespace here does not turn ordinary prose into a
     # question start, and it also preserves bare Part 1 photo numbers.
-    # A no-punctuation OCR marker must start with an actual digit.  Allowing
-    # ``l``/``I`` here makes ordinary lines such as ``last Friday`` or
-    # ``in likely`` look like question numbers and truncates the preceding
-    # question before its options.  Letter substitutions remain supported by
-    # the punctuation form below (``l84.``/``O97.``).
+    # A no-punctuation OCR marker must start with an actual digit and the
+    # question stem must begin with an uppercase letter. Without that guard,
+    # ordinary passage text such as ``200 guests and is ideal ...`` is parsed
+    # as question 200; the sequence resolver then jumps over every real
+    # question that follows on the page. Letter substitutions remain
+    # supported by the punctuation form below (``l84.``/``O97.``), while the
+    # normal punctuation-free scan form (``78 According ...``) is retained.
     r"(?m)^[ \t]*(?P<number>[0-9]{1,4})[ \t]*"
-    r"(?:[\.\)][ \t]*|(?=[A-Za-z]))"
+    r"(?:[\.\)][ \t]*|(?=[A-Z]))"
 )
 UNMARKED_OPTION_A = re.compile(r"(?m)^[ \t]*\(A\)[ \t]*")
 NUMBER_TOKEN = re.compile(r"^[\(\[]?([0-9IlOo]{1,4})[\.\)\]]?$")
@@ -187,37 +189,6 @@ READING_GROUP_HEADER = re.compile(
     r"\s*refer\s*to\s*the\s*following\s*(?P<description>[^\n|]+)",
     re.IGNORECASE,
 )
-
-# Patterns to detect cover and direction pages that should be skipped.
-_COVER_PAGE = re.compile(
-    r"(?:"
-    r"^\s*TEST\s*0?[1-9]"
-    r"|기출\s*TEST"
-    r"|실전\s*TEST"
-    r"|ETS\s+TOEIC"
-    r"|ACTUAL\s*TEST"
-    r"|PRACTICE\s*TEST"
-    r"|TOEIC\s+LISTENING"
-    r"|TOEIC\s+READING"
-    r"|LC\s+TEST"
-    r"|RC\s+TEST"
-    r")",
-    re.IGNORECASE | re.MULTILINE,
-)
-_DIRECTION_PAGE = re.compile(
-    r"(?:"
-    r"LISTENING\s+TEST"
-    r"|READING\s+TEST"
-    r"|Directions:\s+For\s+each\s+question"
-    r"|Directions:\s+A\s+word\s+or\s+phrase"
-    r"|In\s+the\s+Listening\s+test"
-    r"|In\s+the\s+Reading\s+test"
-    r"|PART\s*1\b"
-    r"|PART\s*5\b"
-    r")",
-    re.IGNORECASE | re.MULTILINE,
-)
-
 
 def _render_dpi(exam_type: str | None = None) -> int:
     """Choose a resolution that balances OCR accuracy and scan throughput."""
@@ -274,193 +245,14 @@ def _detect_content_start(
     page_results: list["PageResult"],
     exam_type: str,
 ) -> int:
-    """Return the 1-based page number where actual question content begins.
+    """Return page 1: callers provide a PDF already trimmed to exam content.
 
-    Scans OCR/text output of early pages to find where question content begins,
-    skipping standalone cover and directions pages (pages without question numbers).
+    The previous OCR heuristic skipped cover/direction pages based on weak OCR
+    text. That shifted physical page numbers and broke Listening photo crops.
+    Users now crop the cover themselves; both Listening (photo 1/2 on the first
+    page) and Reading (question 101 on the first page) are processed from page
+    one without an automatic prefix decision.
     """
-    if not page_results:
-        return 1
-
-    pages = sorted(page_results, key=lambda p: p.number)
-
-    def _has_questions(text: str) -> bool:
-        for match in QUESTION_START.finditer(text):
-            num = _normalize_number(match.group("number"))
-            if (1 <= num <= 100) if exam_type == "listening" else (101 <= num <= 200):
-                return True
-        return False
-
-    def _is_dir(text: str) -> bool:
-        return _DIRECTION_PAGE.search(text) is not None
-
-    def _is_cov(text: str) -> bool:
-        return _COVER_PAGE.search(text) is not None
-
-    def _is_listening_part_one_photo_page(page: "PageResult") -> bool:
-        """Recognize the first real Listening Part 1 page without parsing it.
-
-        Some scanned TOEIC booklets put the Part 1 directions on their own
-        page, followed by a page containing only photos labelled ``1.`` and
-        ``2.``.  A lone marker is not enough: directions can contain numbered
-        steps.  Two markers on a non-direction page are a reliable anchor;
-        when the Part 1 heading is printed on the same page, require their
-        OCR boxes to be vertically separated like two photo captions.
-        """
-        combined = "\n".join(page.columns)
-        markers: set[int] = set()
-        marker_tops: list[int] = []
-
-        for match in QUESTION_START.finditer(combined):
-            number = _normalize_number(match.group("number"))
-            if number in {1, 2}:
-                markers.add(number)
-
-        for token in page.tokens:
-            match = NUMBER_TOKEN.match(token.text)
-            if not match:
-                continue
-            number = _normalize_number(match.group(1))
-            if number in {1, 2}:
-                markers.add(number)
-                marker_tops.append(token.top)
-
-        if markers != {1, 2}:
-            return False
-        if not _is_dir(combined):
-            # Tables and answer choices on later Parts can also contain the
-            # isolated values 1 and 2. Photo captions are sparse and vertically
-            # separated; require that spatial evidence whenever token boxes are
-            # available.
-            return not marker_tops or (
-                len(marker_tops) >= 2
-                and max(marker_tops) - min(marker_tops)
-                >= max(120, page.height // 6)
-            )
-
-        # A Part 1 heading may share the first photo page.  Its two labels
-        # are far apart vertically, unlike a numbered instruction list.
-        return (
-            len(marker_tops) >= 2
-            and max(marker_tops) - min(marker_tops) >= max(120, page.height // 6)
-        )
-
-    # Part 1 is image-only in standard TOEIC booklets, so OCR may see only a
-    # stray question number (or no number at all). Part 2 is the reliable
-    # anchor: it starts three physical pages after the six Part 1 photos.
-    if exam_type == "listening":
-        def _is_part_two_anchor(page: "PageResult") -> bool:
-            combined = "\n".join(page.columns)
-            if not re.search(r"\bPART\s*2\b", combined, re.IGNORECASE):
-                return False
-            # A vertical TEST 2 tab or stray sentence on a later page can be
-            # misread as PART 2. The real section page also contains its
-            # spoken-response directions or several question numbers 7..31.
-            if re.search(
-                r"(?:Directions|answer\s+sheet|question\s+or\s+statement|"
-                r"three\s+responses|will\s+be\s+spoken)",
-                combined,
-                re.IGNORECASE,
-            ):
-                return True
-            part_two_numbers = {
-                number
-                for match in QUESTION_START.finditer(combined)
-                if (number := _normalize_number(match.group("number"))) is not None
-                and 7 <= number <= 31
-            }
-            return len(part_two_numbers) >= 2
-
-        part2_page = next(
-            (page.number for page in pages if _is_part_two_anchor(page)),
-            None,
-        )
-        photo_search_pages = [
-            page
-            for page in pages[: min(12, len(pages))]
-            if part2_page is None or page.number < part2_page
-        ]
-        for page in photo_search_pages:
-            if _is_listening_part_one_photo_page(page):
-                logger.info(
-                    "[LISTENING_PREFIX] Part 1 markers 1/2 found at page %d; skipping %d prefix page(s)",
-                    page.number,
-                    page.number - 1,
-                )
-                return page.number
-
-        if part2_page is not None:
-            marker_pages: list[int] = []
-            marker_numbers: set[int] = set()
-            for page in pages:
-                if page.number >= part2_page:
-                    continue
-                combined = "\n".join(page.columns)
-                for match in QUESTION_START.finditer(combined):
-                    number = _normalize_number(match.group("number"))
-                    if number is not None and 1 <= number <= 6:
-                        marker_numbers.add(number)
-                        marker_pages.append(page.number)
-                        break
-                for token in page.tokens:
-                    marker = NUMBER_TOKEN.match(token.text)
-                    if not marker:
-                        continue
-                    number = _normalize_number(marker.group(1))
-                    if number is not None and 1 <= number <= 6:
-                        marker_numbers.add(number)
-                        marker_pages.append(page.number)
-                        break
-            # A standalone Part 2 PDF has no Part 1 photo pages to retain.
-            # Start at the first page carrying the real Part 2 heading unless
-            # OCR found a reliable earlier photo page marker.
-            photo_prefix = (
-                pages[0].number
-                if len(set(marker_pages)) >= 2 and len(marker_numbers) >= 2
-                else None
-            )
-            start = min([part2_page, photo_prefix] if photo_prefix else [part2_page])
-            logger.info(
-                "[LISTENING_PREFIX] Part 2 page=%d; Part 1 photo pages start at page=%d",
-                part2_page,
-                start,
-            )
-            return start
-
-    # Step 1: Find the first page that actually contains valid question starts.
-    # Twelve pages covers booklets with a cover, copyright, table of contents
-    # and separate direction sheets while keeping the prefix rule bounded.
-    prefix_pages = pages[: min(12, len(pages))]
-    for page in prefix_pages:
-        combined = "\n".join(page.columns)
-        if _has_questions(combined):
-            if page.number > 1:
-                logger.info(
-                    "[SKIP_PAGES] exam_type=%s content starts at page %d (skipping %d prefix page(s))",
-                    exam_type,
-                    page.number,
-                    page.number - 1,
-                )
-            return page.number
-
-    # Step 2: If no question numbers were found on early pages, skip standalone cover/direction pages.
-    skip = 0
-    for page in prefix_pages:
-        combined = "\n".join(page.columns)
-        if (_is_cov(combined) or _is_dir(combined) or len(combined.strip()) < 800) and not _has_questions(combined):
-            skip = page.number
-        else:
-            break
-
-    if 0 < skip < len(pages):
-        logger.info(
-            "[SKIP_PAGES] exam_type=%s skipping %d prefix page(s) by cover analysis; content starts at page %d",
-            exam_type,
-            skip,
-            skip + 1,
-        )
-        return skip + 1
-
     return 1
 
 
@@ -1398,20 +1190,55 @@ def _read_text_layer(pdf_path: str) -> dict[int, list[str]]:
 
 
 def _reading_text_page_is_usable(columns: list[str], page_number: int) -> bool:
-    """Use native PDF text when it contains a real header or complete questions."""
+    """Use native PDF text only when every printed question is complete.
+
+    A selectable text layer is frequently only partially extracted: one
+    column may contain all choices except the first question's choices while
+    the rest of the page looks valid. Treating that page as entirely usable
+    silently disables raster OCR for the damaged block. Headers remain safe
+    evidence for passage-only pages; otherwise all unique question numbers
+    on the page must carry a complete option set (and a stem for Part 5/7).
+    """
     combined = "\n".join(columns)
-    if READING_GROUP_HEADER.search(combined):
-        return True
-    for column, text in enumerate(columns):
+    has_group_header = READING_GROUP_HEADER.search(combined) is not None
+    parsed = [
+        item
+        for column, text in enumerate(columns)
         for item in _parse_column(
             text,
             page=page_number,
             column=column,
             confidence=99.0,
+        )
+        if 101 <= int(item["number"]) <= 200
+    ]
+    if not parsed:
+        # A passage-only page has no answer blocks; its selectable header is
+        # sufficient for crop association and there is nothing to raster-OCR.
+        return has_group_header
+
+    # Part 6 repeats blank numbers inside the passage and beside the choices.
+    # Judge one richest candidate per number instead of rejecting a clean page
+    # because the passage copy has no standalone options.
+    best_by_number: dict[int, dict[str, Any]] = {}
+    for item in parsed:
+        number = int(item["number"])
+        current = best_by_number.get(number)
+        if current is None or (
+            len(item.get("options") or {}),
+            len(str(item.get("text") or "")),
+        ) > (
+            len(current.get("options") or {}),
+            len(str(current.get("text") or "")),
         ):
-            if 101 <= int(item["number"]) <= 200 and len(item["options"]) >= 3:
-                return True
-    return False
+            best_by_number[number] = item
+
+    for number, item in best_by_number.items():
+        if len(item.get("options") or {}) < 4:
+            return False
+        if number >= 147 and not _question_text_is_usable(str(item.get("text") or "")):
+            return False
+    return True
 
 
 def _text_layer_is_usable(pages: dict[int, list[str]], exam_type: str) -> bool:
@@ -3889,11 +3716,12 @@ def extract_exam(
             time.perf_counter() - locator_started, 3
         )
 
-    # Detect cover/direction prefix pages AFTER OCR so we can inspect the
-    # actual OCR output (works for both text-based and scanned PDFs).
-    content_start_page = _detect_content_start(page_results, exam_type)
-    content_offset = content_start_page - 1  # 0 when no prefix pages
-    skip_pages: set[int] = set(range(1, content_start_page))
+    # Input PDFs are required to be trimmed by the user before upload. Keep
+    # physical page numbering unchanged: Listening starts with its first photo
+    # page and Reading starts with question 101 on page one.
+    content_start_page = 1
+    content_offset = 0
+    skip_pages: set[int] = set()
 
     candidates: list[dict[str, Any]] = []
     if reading_roi_mode:
@@ -3962,7 +3790,7 @@ def extract_exam(
                     candidates.extend(_candidates_from_page_result(roi_page))
     else:
         for page in page_results:
-            # Do not parse OCR text from skipped prefix pages.
+            # Input PDFs are already trimmed; page 1 is intentionally parsed.
             if page.number in skip_pages:
                 continue
             if page.number in text_layer and page.number not in text_pages:

@@ -852,9 +852,15 @@ def patch_exam_bank(
                 },
             )
         changed: dict[str, Any] = {}
-        if body.title is not None:
-            title = " ".join(body.title.split())
-            title_key = teacher_scoped_title_key(str(exam.owner_user_id or ""), title)
+        title = " ".join(body.title.split()) if body.title is not None else exam.title
+        tag = session.get(ExamTag, body.tag_id) if body.tag_id is not None else None
+        if body.tag_id is not None and tag is None:
+            raise HTTPException(status_code=404, detail="Không tìm thấy Tag")
+        next_category = tag.name if tag is not None else exam.category
+        if body.title is not None or tag is not None:
+            title_key = teacher_scoped_title_key(
+                str(exam.owner_user_id or ""), title, next_category
+            )
             if not title_key:
                 raise HTTPException(status_code=422, detail="Tên đề không được để trống")
             duplicate = session.scalar(
@@ -866,14 +872,12 @@ def patch_exam_bank(
             )
             if duplicate:
                 raise HTTPException(status_code=409, detail="Tên đề đã tồn tại trong Kho chung")
+            exam.shared_title_key = title_key
+        if body.title is not None:
             changed["title"] = {"from": exam.title, "to": title}
             exam.title = title
-            exam.shared_title_key = title_key
             exam.payload = {**(exam.payload or {}), "title": title}
-        if body.tag_id is not None:
-            tag = session.get(ExamTag, body.tag_id)
-            if tag is None:
-                raise HTTPException(status_code=404, detail="Không tìm thấy Tag")
+        if tag is not None:
             changed["tag"] = {"from": exam.category, "to": tag.name}
             exam.category = tag.name
             exam.payload = {**(exam.payload or {}), "category": tag.name}

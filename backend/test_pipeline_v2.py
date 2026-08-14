@@ -204,7 +204,7 @@ class OcrRoutingTests(unittest.TestCase):
             confidence=90,
         )
 
-    def test_detects_content_after_cover_and_directions(self) -> None:
+    def test_keeps_physical_page_one_after_caller_trims_cover(self) -> None:
         pages = [
             self.page(1, "ETS TOEIC PRACTICE TEST"),
             self.page(2, "READING TEST\nDirections: A word or phrase"),
@@ -214,19 +214,19 @@ class OcrRoutingTests(unittest.TestCase):
                 "(A) One\n(B) Two\n(C) Three\n(D) Four",
             ),
         ]
-        self.assertEqual(_detect_content_start(pages, "reading"), 3)
+        self.assertEqual(_detect_content_start(pages, "reading"), 1)
 
-    def test_detects_reading_content_after_cover_in_two_page_document(self) -> None:
+    def test_reading_never_auto_skips_a_prefix_page(self) -> None:
         pages = [
             self.page(1, "RC TEST 01"),
             self.page(2, "101. First reading question\n(A) One\n(B) Two\n(C) Three\n(D) Four"),
         ]
-        self.assertEqual(_detect_content_start(pages, "reading"), 2)
+        self.assertEqual(_detect_content_start(pages, "reading"), 1)
 
-    def test_skips_a_long_prefix_before_the_first_reading_question(self) -> None:
+    def test_reading_keeps_page_one_even_when_ocr_looks_like_directions(self) -> None:
         pages = [self.page(number, "RC TEST\nDirections") for number in range(1, 7)]
         pages.append(self.page(7, "101. First reading question\n(A) One\n(B) Two\n(C) Three\n(D) Four"))
-        self.assertEqual(_detect_content_start(pages, "reading"), 7)
+        self.assertEqual(_detect_content_start(pages, "reading"), 1)
 
     def test_never_skips_a_page_that_contains_a_valid_question(self) -> None:
         pages = [
@@ -258,6 +258,26 @@ class OcrRoutingTests(unittest.TestCase):
             confidence=90,
         )
         self.assertEqual([item["number"] for item in parsed], [78])
+
+    def test_does_not_treat_passage_number_as_question_marker(self) -> None:
+        parsed = _parse_column(
+            "The space can accommodate up to 200 guests and is ideal for\n"
+            "wedding receptions.\n"
+            "151. What is indicated about the venue?\n"
+            "(A) One\n(B) Two\n(C) Three\n(D) Four",
+            page=10,
+            column=0,
+            confidence=99,
+        )
+        self.assertEqual([item["number"] for item in parsed], [151])
+
+    def test_reading_text_layer_falls_back_when_one_question_lacks_options(self) -> None:
+        columns = [
+            "109. Incomplete question\n"
+            "110. Complete question\n(A) One\n(B) Two\n(C) Three\n(D) Four",
+            "",
+        ]
+        self.assertFalse(_reading_text_page_is_usable(columns, 2))
 
     def test_reading_partial_part_six_and_seven_uses_the_real_sixty_question_span(self) -> None:
         pages = [
@@ -308,14 +328,14 @@ class OcrRoutingTests(unittest.TestCase):
         ]
         self.assertEqual(_detect_content_start(pages, "listening"), 1)
 
-    def test_listening_starts_at_page_with_first_two_photo_markers(self) -> None:
+    def test_listening_always_starts_at_physical_page_one(self) -> None:
         pages = [
             self.page(1, "LC TEST 01"),
             self.page(2, "LISTENING TEST\nPART 1\nDirections: Listen carefully."),
             self.page(3, "1.\nA photograph\n\n2.\nAnother photograph"),
             self.page(4, "PART 2\nDirections"),
         ]
-        self.assertEqual(_detect_content_start(pages, "listening"), 3)
+        self.assertEqual(_detect_content_start(pages, "listening"), 1)
 
     def test_standalone_part_two_starts_at_its_section_page(self) -> None:
         pages = [
@@ -324,22 +344,22 @@ class OcrRoutingTests(unittest.TestCase):
         ]
         self.assertEqual(_detect_content_start(pages, "listening"), 1)
 
-    def test_listening_does_not_treat_numbered_directions_as_photo_markers(self) -> None:
+    def test_listening_does_not_auto_skip_numbered_directions(self) -> None:
         pages = [
             self.page(1, "LC TEST 01"),
             self.page(2, "LISTENING TEST\nPART 1\n1. Read the directions\n2. Mark the sheet"),
             self.page(3, "1.\nA photograph\n\n2.\nAnother photograph"),
             self.page(4, "PART 2\nDirections"),
         ]
-        self.assertEqual(_detect_content_start(pages, "listening"), 3)
+        self.assertEqual(_detect_content_start(pages, "listening"), 1)
 
-    def test_listening_rejects_stray_part_two_text_without_section_evidence(self) -> None:
+    def test_listening_ignores_part_two_anchor_for_page_start(self) -> None:
         pages = [
             self.page(1, "cover"),
             self.page(2, "PART 2\nA later-page OCR false positive"),
             self.page(3, "32. First printed question\n(A) One\n(B) Two"),
         ]
-        self.assertEqual(_detect_content_start(pages, "listening"), 3)
+        self.assertEqual(_detect_content_start(pages, "listening"), 1)
 
     def test_listening_ignores_late_table_values_one_and_two(self) -> None:
         pages = [
@@ -1592,12 +1612,14 @@ class Test1ReadingGoldenTest(unittest.TestCase):
                 for stimulus in result["stimuli"]
             }
             expected = {
-                (172, 173, 174, 175): (1, [18]),
-                (176, 177, 178, 179, 180): (2, [20, 20]),
-                (181, 182, 183, 184, 185): (2, [22, 22]),
-                (186, 187, 188, 189, 190): (3, [24, 25, 25]),
-                (191, 192, 193, 194, 195): (3, [26, 27, 27]),
-                (196, 197, 198, 199, 200): (3, [28, 29, 29]),
+                # The upload is already cover-trimmed, so keep the physical
+                # source page containing the passage/header (page 17).
+                (172, 173, 174, 175): (1, [17]),
+                (176, 177, 178, 179, 180): (2, [19, 19]),
+                (181, 182, 183, 184, 185): (2, [21, 21]),
+                (186, 187, 188, 189, 190): (3, [23, 23, 24]),
+                (191, 192, 193, 194, 195): (3, [25, 25, 26]),
+                (196, 197, 198, 199, 200): (3, [27, 27, 28]),
             }
             for numbers, (asset_count, pages) in expected.items():
                 self.assertIn(numbers, stimuli)

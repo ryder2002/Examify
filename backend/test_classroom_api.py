@@ -23,6 +23,7 @@ os.environ["JWT_SECRET"] = "classroom-test-secret-long-enough"
 os.environ["TOKEN_EXPORT_SECRET"] = "classroom-token-export-secret-long-enough"
 os.environ["REDIS_URL"] = "redis://127.0.0.1:1/15"
 
+from fastapi import HTTPException  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
 import auth_service  # noqa: E402
@@ -291,6 +292,53 @@ class ClassroomApiTests(unittest.TestCase):
             self.assertEqual(version.content_hash, attempt_version_hash)
             self.assertEqual(attempt.exam_version_id, attempt_version_id)
             self.assertNotEqual(exam.current_version_id, attempt_version_id)
+
+    def test_shared_exam_title_can_repeat_under_different_tags(self) -> None:
+        with session_scope() as session:
+            teacher = User(
+                email="teacher-tag-scope@shared.test",
+                display_name="Teacher tag scope",
+                password_hash=hash_password(self.PASSWORD),
+                registered_at=utcnow(),
+                role="teacher",
+                status="active",
+            )
+            session.add(teacher)
+            session.flush()
+            teacher_id = teacher.id
+
+        payload = {
+            "schema_version": 2,
+            "exam_type": "reading",
+            "questions": [],
+            "stimuli": [],
+            "audios": [],
+            "solutions": [],
+        }
+        first = persist_final_exam(
+            payload,
+            job_id=None,
+            owner_user_id=teacher_id,
+            title="TEST 1",
+            category="2018",
+        )
+        second = persist_final_exam(
+            payload,
+            job_id=None,
+            owner_user_id=teacher_id,
+            title="TEST 1",
+            category="2019",
+        )
+        self.assertNotEqual(first, second)
+        with self.assertRaises(HTTPException) as duplicate:
+            persist_final_exam(
+                payload,
+                job_id=None,
+                owner_user_id=teacher_id,
+                title="TEST 1",
+                category="2018",
+            )
+        self.assertEqual(duplicate.exception.status_code, 409)
 
     def test_teacher_assignment_guest_attempt_and_monitoring(self) -> None:
         admin_email = config.settings.admin_email

@@ -41,7 +41,7 @@ PDF scan LC/RC
 | OCR-H-03 | HIGH | Golden test LC mới kiểm tra non-empty nên không chặn regression issue flag ở Part 3/4; RC chạy opt-in nên dễ bị bỏ qua CI | Regression chưa yêu cầu các Part OCR phải không có `question_missing`/`options_missing`, fixture không được chạy trong test command mặc định | Nâng golden assertion cho LC/RC; bổ sung benchmark/command rõ ràng, chỉ báo cáo kết quả thực đo | Ngăn tái phát “có 100 câu nhưng text sai/thiếu” |
 | AUTH-C-01 | CRITICAL | Student vào `/exam-bank` thấy toàn bộ đề `teacher_shared` của mọi Teacher | `list_exam_bank` chỉ lọc `library_scope`, không có `ClassMember -> Classroom.owner_teacher_id == Exam.owner_user_id` | Lọc Student bằng `EXISTS` membership `active` ở bất kỳ lớp nào thuộc đúng owner Teacher; bắt buộc kiểm tra tương tự khi start attempt | Student A chỉ thấy đúng kho của Teacher có lớp mà em đã join; chặn IDOR bằng exam ID |
 | AUTH-C-02 | CRITICAL | Teacher B có thể list, edit, archive/delete và publish đề Teacher A | `_shared_exam` và mutation chỉ kiểm role Teacher/Admin, không kiểm owner của exam | Teacher chỉ được quản trị `Exam.owner_user_id` của mình; Admin vẫn có quyền toàn hệ thống; kiểm tra ownership ở finalize/edit session/publication | Không còn sửa/xóa/công bố chéo dữ liệu Teacher |
-| AUTH-H-03 | HIGH | Tên đề `shared_title_key` là unique toàn cục, mâu thuẫn với kho tách theo Teacher | Schema/key cũ được thiết kế cho một Kho chung toàn hệ thống | Chuẩn hoá key theo `owner_user_id + normalized_title`, backfill dữ liệu bằng Alembic migration; giữ unique DB để chống race trong từng kho Teacher | Hai Teacher có thể có đề cùng tên, nhưng một Teacher không tạo trùng đề của chính mình |
+| AUTH-H-03 | HIGH | Tên đề `shared_title_key` chưa phân biệt Tag, nên `TEST 1` ở 2018 va vào 2019 | Schema/key cũ chỉ có namespace Teacher + title | Chuẩn hoá key theo `owner_user_id + normalized_category + normalized_title`, backfill bằng Alembic migration; giữ unique DB để chống race trong cùng Teacher/Tag | Một Teacher được dùng lại title giữa các Tag, nhưng không tạo trùng trong cùng Tag |
 | DB-M-04 | MEDIUM | Điều kiện visibility mới là hot path list/start nhưng index hiện chỉ rời rạc `class_members.user_id` | `EXISTS` join membership/classroom cần lọc user/status/classroom lặp lại | Thêm một composite index đúng predicate; không thêm cache/Redis mới | List/start bounded, không scan membership khi có 200 Student active |
 
 ### Phần không cần sửa
@@ -91,6 +91,16 @@ PDF scan LC/RC
   của Teacher B chỉ thấy B; sau đó join riêng lớp `600+` của Teacher A thì thấy
   toàn bộ bank của A và B. Teacher B không thể sửa/xóa đề A. Hai Teacher được
   đặt cùng title mà không va chạm dữ liệu.
+
+### Follow-up theo format upload mới (2026-08-13)
+
+- `content_start_page` không còn được suy luận từ OCR. Pipeline luôn giữ page 1
+  và trả `skipped_pages=[]`; người dùng chịu trách nhiệm cắt cover/directions.
+- `shared_title_key` đã chuyển sang `Teacher + normalized Tag + normalized
+  title`; migration `0025_tag_scoped_exam_titles` backfill key hiện hữu.
+- Regression trong backend image: tag-scope title PASS, owner-scope/routing
+  PASS, `test_pipeline_v2` PASS 80 tests (6 skip). Golden LC/RC chưa rerun sau
+  follow-up vì hai PDF fixture không còn hiện diện trong workspace hiện tại.
 
 ## Audit incident backend cạn `/tmp` khi tạo nhiều đề (2026-08-11)
 
@@ -558,7 +568,7 @@ Finalize local
 | DESK-M-01 | MEDIUM | `DesktopStore` khởi tạo schema/migration lặp lại mỗi endpoint | Mỗi route tạo instance mới và chạy `executescript(SCHEMA)` | Tạo singleton trong lifespan/app state, vẫn mở connection ngắn theo operation | Giảm lock/schema I/O cục bộ, đặc biệt khi UI poll |
 | DESK-M-02 | MEDIUM | Retry queue không có lease/`syncing`; hai WebView event gần nhau chỉ được chặn bằng biến JS trong một runtime | SQLite queue có status nhưng worker không claim atomically | Atomic claim/lease và reset lease stale; frontend single-flight vẫn giữ | Chịu được reload/multi-window/crash giữa sync |
 | DESK-M-03 | MEDIUM | macOS artifact chỉ ad-hoc, không notarized | Không có Apple Developer ID/notarization | Giữ hướng dẫn quarantine cho internal; production public cần Developer ID | Build có thể chạy nhưng không thể hứa Gatekeeper one-click |
-| OCR-H-01 | HIGH | Thay đổi OCR cover/direction/downscale chưa có golden corpus để chứng minh accuracy | Unit test parser không đo recall/crop correctness trên PDF thật; heuristic có thể skip nhầm trang có câu | Bổ sung regression fixtures/metrics; chỉ accept fast path khi invariant số câu/crop đạt | OCR local nhanh hơn nhưng không đánh đổi chính xác |
+| OCR-H-01 | HIGH | Heuristic tự nhận diện cover/direction có thể skip nhầm trang đầu và làm lệch crop | File upload thực tế đã được người dùng tự cắt bìa; detector dựa OCR là không cần thiết và dễ sai với trang ảnh Listening | Bỏ auto-skip; luôn xử lý từ physical page 1. Listening yêu cầu trang 1 là ảnh 1/2; Reading yêu cầu trang 1 chứa câu 101 | Không còn lệch số trang do detector; trách nhiệm cắt bìa rõ ràng ở input |
 | OCR-M-01 | MEDIUM | Windows và macOS dùng hai PyInstaller layout/spec khác nhau; test native chỉ chạy trong GitHub runner tương ứng | Không thể cross-run Mach-O/NSIS sidecar trên Linux | Giữ matrix native, smoke OCR sau bundle/install và upload diagnostics; local Linux chỉ là static/unit gate | Phát hiện thiếu DLL/dylib/model trước release |
 
 ### Phần đang đúng và không cần rewrite

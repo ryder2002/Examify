@@ -557,7 +557,7 @@ PgBouncer giữ backend pool tối đa `50` để bảo vệ CPU/RAM.
 
 ## Release gate: OCR LC/RC và Kho đề theo Teacher (2026-08-13)
 
-- [ ] Đã backup PostgreSQL trước release. Không chạy downgrade `0024` sau khi
+- [ ] Đã backup PostgreSQL trước release. Không chạy downgrade `0025` sau khi
   production đã cho phép hai Teacher dùng cùng title.
 - [ ] Với `.env` production hợp lệ, build và migrate theo thứ tự:
 
@@ -568,7 +568,7 @@ PgBouncer giữ backend pool tối đa `50` để bảo vệ CPU/RAM.
   docker compose up -d --force-recreate api worker frontend nginx
   ```
 
-- [ ] Xác nhận migration head là `0024_teacher_scoped_exam_bank` và health
+- [ ] Xác nhận migration head là `0025_tag_scoped_exam_titles` và health
   readiness trả 200:
 
   ```bash
@@ -580,10 +580,12 @@ PgBouncer giữ backend pool tối đa `50` để bảo vệ CPU/RAM.
   kho của Teacher A; join một trong các lớp A (500+/600+/800+) thì thấy tất cả
   đề A; join lớp B không làm lộ đề Teacher khác. Teacher B không sửa/xóa/publish
   đề A. Manual **Giao bài cho lớp** vẫn hoạt động riêng.
-- [ ] Chạy fixture `LC.pdf` và `RC.pdf` bằng worker/host production hoặc môi
-  trường staging tương đương; kiểm tra Part 3/4 đủ text/A--D, job không có
-  warning Review và theo dõi CPU, scratch disk, duration. Không hạ
-  `OCR_LISTENING_PAGE_SCALE` dưới `1.0` khi chưa có golden thay thế.
+- [ ] Tự cắt cover/direction trước upload. Fixture Listening phải bắt đầu ở
+  physical page 1 với ảnh câu 1--2; fixture Reading phải bắt đầu ở physical
+  page 1 với câu 101. Chạy cả hai fixture bằng worker/host production hoặc
+  staging tương đương; kiểm tra Part 3/4 đủ text/A--D và theo dõi CPU, scratch
+  disk, duration. Không hạ `OCR_LISTENING_PAGE_SCALE` dưới `1.0` khi chưa có
+  golden thay thế.
 - [ ] Sau deploy, giám sát Celery queue, `ocr_progress`, free scratch disk và
   PostgreSQL error/latency trong giờ đầu. Không tăng worker/page-worker pool chỉ
   vì OCR job dài hơn trên fixture chất lượng cao.

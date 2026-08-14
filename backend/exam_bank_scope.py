@@ -10,12 +10,22 @@ from exam_solutions import normalized_name_key
 from models import ClassMember, Classroom, Exam
 
 
-def teacher_scoped_title_key(owner_user_id: str, title: str) -> str:
-    """Normalize a bank title within its teacher owner's namespace."""
-    name_key = normalized_name_key(title)
-    if not owner_user_id or not name_key:
+def teacher_scoped_title_key(
+    owner_user_id: str,
+    title: str,
+    category: str | None = None,
+) -> str:
+    """Normalize a bank title within one teacher/tag namespace.
+
+    The same visible title is valid under different tags (for example
+    ``TEST 1`` under ``2018`` and ``2019``), while a duplicate in the same
+    teacher/tag catalogue remains protected by the database unique key.
+    """
+    title_key = normalized_name_key(title)
+    category_key = normalized_name_key(category or "")
+    if not owner_user_id or not title_key:
         return ""
-    return f"{owner_user_id}:{name_key}"
+    return f"{owner_user_id}:{category_key}:{title_key}"
 
 
 def exam_bank_visibility_filters(identity: dict[str, Any]) -> list[Any]:

@@ -81,7 +81,7 @@ export default function AnswerKeyImport({
       return;
     }
     setScanning(true);
-    setMessage(null);
+    setMessage("Đang đọc bảng đáp án…");
     const formData = new FormData();
     formData.append("file", file);
     const controller = new AbortController();
@@ -163,6 +163,7 @@ export default function AnswerKeyImport({
   }
 
   function handlePaste(event: React.ClipboardEvent<HTMLElement>) {
+    if (scanning) return;
     const imageItem = [...event.clipboardData.items].find((item) =>
       item.type.startsWith("image/"),
     );

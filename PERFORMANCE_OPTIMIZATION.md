@@ -1150,22 +1150,40 @@ Celery `succeeded` trong 74,9 giây.
   bài** có giới hạn attempt, lịch mở/đóng, giám sát và công bố kết quả.
 - Authorization được áp dụng cho list, tag, start attempt và mọi mutation.
   Teacher không thể truy cập đề Teacher khác; Admin vẫn quản trị toàn hệ thống.
-  `shared_title_key` đã namespace theo owner để hai Teacher dùng cùng title an
-  toàn.
+  `shared_title_key` đã namespace theo owner/tag để hai Teacher dùng cùng title
+  và một Teacher dùng lại title giữa các Tag an toàn.
 - Migration `0024_teacher_scoped_exam_bank` backfill key hiện có và thêm index
   `(user_id, status, classroom_id)` cho lookup membership. Nó không xóa dữ liệu
   và downgrade cố ý không bỏ prefix vì sau migrate title trùng giữa Teacher là
   hợp lệ.
+- Migration `0025_tag_scoped_exam_titles` bổ sung Tag vào khóa title và backfill
+  toàn bộ shared exam hiện có.
 - Đã sửa thêm idempotency cho **Giao bài cho lớp**: lần publish trùng bây giờ
   nhận đúng immutable snapshot đã có và trả `already_published`, thay vì cố
   insert lại `publication_key` duy nhất.
 
 ### Verification run locally
 
-- `LC.pdf` golden: PASS (34,062 s); `RC.pdf` golden opt-in: PASS (68,100 s).
+- Golden `LC.pdf`/`RC.pdf` trước follow-up: PASS (34,062 s / 68,100 s).
 - Backend routing/OCR regression: 39 tests PASS; classroom integration: 4
   tests PASS; `python -m compileall -q .` và `alembic heads` PASS, head là
-  `0024_teacher_scoped_exam_bank`.
+  `0025_tag_scoped_exam_titles`.
 - Frontend `npm run lint` và `npm run build` PASS.
 - Không có benchmark 50--200 concurrent hoặc tải production trong thay đổi này;
   không dùng các kết quả correctness ở trên để xác nhận capacity.
+
+## Input contract and tag-scoped titles — 2026-08-13 follow-up
+
+- Cover/direction auto-skip đã bị loại bỏ khỏi runtime. Người dùng phải tự cắt
+  bìa trước khi upload: Listening physical page 1 là trang có ảnh câu 1--2
+  như mẫu, Reading physical page 1 bắt đầu từ câu 101. Pipeline giữ nguyên số
+  trang nguồn, `content_start_page=1`, `skipped_pages=[]`; nếu upload còn bìa,
+  đó là input không hợp lệ cần cắt lại.
+- `shared_title_key` hiện là `owner_user_id + normalized_tag + normalized_title`.
+  Vì vậy `TEST 1` dưới tag `2018` và `TEST 1` dưới tag `2019` hợp lệ; cùng
+  Teacher và cùng Tag vẫn trả 409. Migration mới là
+  `0025_tag_scoped_exam_titles`.
+- Verification sau thay đổi: backend container unittest cho tag scope PASS;
+  routing + owner-scope integration PASS (28 tests). Golden PDF không được
+  chạy lại trong lượt này vì `LC.pdf`/`RC.pdf` không còn trong workspace hiện
+  tại; cần chạy lại golden sau khi đặt hai fixture đã cắt bìa vào repository.

@@ -30,7 +30,14 @@ NUMBER_TRANSLATION = str.maketrans({
 ANSWER_KEY_OCR_BUDGET_SECONDS = 30.0
 ANSWER_KEY_OCR_CALL_TIMEOUT_SECONDS = 6.0
 ANSWER_KEY_MIN_CONFIDENCE = 45.0
-ANSWER_KEY_TEXT_SCORE = 0.30
+# Tesseract 4 frequently reports confidence ``0`` for perfectly readable
+# compact answer rows (especially when five ``number(letter)`` pairs share a
+# line).  The answer-key parser is deliberately pair-aware and validates the
+# number range/option letter afterwards, so dropping those words here turns a
+# complete key into an apparently random 15–25 answer result.  Keep all OCR
+# tokens for this bounded, whitelist-only profile and let the parser/geometry
+# checks decide what is usable.
+ANSWER_KEY_TEXT_SCORE = 0.0
 
 
 class AnswerKeyOcrTimeout(TimeoutError):

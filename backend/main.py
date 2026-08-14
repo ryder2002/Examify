@@ -2014,6 +2014,8 @@ def finalize_extraction(
         existing_exams = ds.list_exams()
         if any(
             item.get("title", "").strip().lower() == target_title.lower()
+            and str(item.get("category") or "").strip().casefold()
+            == str(request.category or "").strip().casefold()
             and item.get("client_exam_id") != request.client_exam_id
             for item in existing_exams
         ):
@@ -2042,7 +2044,11 @@ def finalize_extraction(
                     existing = session.scalar(
                         select(Exam).where(
                             Exam.shared_title_key
-                            == teacher_scoped_title_key(identity["user_id"], target_title),
+                            == teacher_scoped_title_key(
+                                identity["user_id"],
+                                target_title,
+                                request.category,
+                            ),
                             Exam.deleted_at.is_(None),
                         )
                     )

@@ -71,6 +71,30 @@ class TesseractOCRAdapterTests(unittest.TestCase):
         self.assertEqual(len(result.lines[0].words), 4)
         self.assertEqual(result.lines[0].box[0], (10.0, 10.0))
 
+    def test_zero_confidence_compact_answer_rows_remain_available_to_parser(self) -> None:
+        # Tesseract 4 can emit confidence 0 for a valid ``number(letter)``
+        # token when several answer pairs share one dense row.  The answer
+        # key profile intentionally passes a zero threshold and validates the
+        # token with its range/letter parser afterwards.
+        result = rapid_ocr._normalize_tesseract_data(
+            {
+                "text": ["1(A)", "2(D)"],
+                "conf": ["0.0", "0.0"],
+                "left": [10, 70],
+                "top": [10, 10],
+                "width": [45, 45],
+                "height": [20, 20],
+                "block_num": [1, 1],
+                "par_num": [1, 1],
+                "line_num": [1, 1],
+                "page_num": [1, 1],
+            },
+            elapsed=0.1,
+            provider="tesseract:cpu",
+            text_score=0.0,
+        )
+        self.assertEqual(result.text, "1(A) 2(D)")
+
     def test_full_page_result_keeps_existing_two_column_parser_contract(self) -> None:
         result = rapid_ocr.OCRResult(
             lines=(

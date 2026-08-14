@@ -22,15 +22,16 @@ JOB_TTL_SECONDS = int(os.getenv("TOOL_TAO_DE_JOB_TTL", str(24 * 60 * 60)))
 # Bump this whenever extraction/cropping semantics change.  Reusing a draft
 # produced by an older cropper would otherwise make uploading the same PDF look
 # as if the new pipeline never ran.
-# v3.4 rejects empty PDF text layers.  Older cached scan-only Listening jobs
-# may contain generated blank placeholders because those pages accidentally
-# skipped raster OCR; they must never be reused after this correction.
+# v3.5 keeps physical page 1 after the caller trims the cover/directions and
+# namespaces shared titles by tag. 3.5.1 additionally fixes Reading sequence
+# jumps caused by passage numbers and re-runs pages with incomplete text layers;
+# older cached jobs must not be reused because they can contain missing 153–195.
 #
 # ``jobs.pipeline_version`` is deliberately VARCHAR(40) in existing
 # deployments, so this durable cache key must remain within that boundary.
 # Keeping the cache version compact prevents an upload from failing with a
 # database 500 before the OCR job is even queued.
-PIPELINE_CACHE_VERSION = "3.4.0-ocrguard-audiocut"
+PIPELINE_CACHE_VERSION = "3.5.1-rc-ocr-sequence"
 if len(PIPELINE_CACHE_VERSION) > 40:  # defensive guard for future revisions
     raise RuntimeError("PIPELINE_CACHE_VERSION vượt quá giới hạn cột jobs")
 DATA_DIR = Path(
