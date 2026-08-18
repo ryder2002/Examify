@@ -169,7 +169,14 @@ export default function AuthGate({ children }: { children: ReactNode }) {
   const check = useCallback(async () => {
     const generation = ++checkGeneration.current;
     const isCurrent = () => generation === checkGeneration.current;
-    if (PUBLIC_PAGES.has(pathname) || pathname === "/public-test" || pathname.startsWith("/public-test/")) {
+    const regressionHarness =
+      process.env.NEXT_PUBLIC_OCR_REGRESSION_HARNESS === "1" && pathname === "/ocr-harness";
+    if (
+      PUBLIC_PAGES.has(pathname) ||
+      pathname === "/public-test" ||
+      pathname.startsWith("/public-test/") ||
+      regressionHarness
+    ) {
       setChecking(false);
       setShowActivation(false);
       return;

@@ -24,14 +24,15 @@ JOB_TTL_SECONDS = int(os.getenv("TOOL_TAO_DE_JOB_TTL", str(24 * 60 * 60)))
 # as if the new pipeline never ran.
 # v3.5 keeps physical page 1 after the caller trims the cover/directions and
 # namespaces shared titles by tag. 3.5.1 additionally fixes Reading sequence
-# jumps caused by passage numbers and re-runs pages with incomplete text layers;
-# older cached jobs must not be reused because they can contain missing 153–195.
+# jumps caused by passage numbers and re-runs pages with incomplete text layers.
+# 3.6 switches web jobs back to server Tesseract and adds watermark filtering /
+# targeted Listening Part 3–4 recovery; old browser drafts must not be reused.
 #
 # ``jobs.pipeline_version`` is deliberately VARCHAR(40) in existing
 # deployments, so this durable cache key must remain within that boundary.
 # Keeping the cache version compact prevents an upload from failing with a
 # database 500 before the OCR job is even queued.
-PIPELINE_CACHE_VERSION = "3.5.1-rc-ocr-sequence"
+PIPELINE_CACHE_VERSION = "3.6-server-tesseract"
 if len(PIPELINE_CACHE_VERSION) > 40:  # defensive guard for future revisions
     raise RuntimeError("PIPELINE_CACHE_VERSION vượt quá giới hạn cột jobs")
 DATA_DIR = Path(

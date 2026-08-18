@@ -118,19 +118,11 @@ def _pdf_rows(
     if text_pages:
         return rows, "pdf_text", None
 
-    # A scan has no text table. Reuse the bounded OCR adapter already shipped
-    # with the extraction worker and keep confidence visible in the preview.
-    from extractor import extract_text
-
-    _split, full, mode = extract_text(str(path), force_ocr=True)
-    for raw_line in full.splitlines():
-        line = raw_line.strip()
-        if not line:
-            continue
-        columns = [value.strip() for value in re.split(r"\t|\s{2,}", line) if value.strip()]
-        if len(columns) >= 3:
-            rows.append([columns[0], columns[1], " ".join(columns[2:])])
-    return rows, "pdf_scan_ocr" if mode == "ocr" else mode, 0.55
+    # Scanned solution PDFs are recognized in the browser and sent through
+    # /solution-imports/validate. Never fall back to server OCR here.
+    raise ValueError(
+        "PDF lời giải là bản scan. Hãy dùng OCR cục bộ trong trình duyệt rồi xác nhận bản xem trước."
+    )
 
 
 def _limit_process() -> None:

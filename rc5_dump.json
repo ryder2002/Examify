@@ -1,0 +1,2959 @@
+{
+  "questions": [
+    {
+      "number": 101,
+      "part": "Part 5 - Phần 5",
+      "text": "A fter upgrading to Pro Data Whiz, our clients began problems with spreadsheets _____.",
+      "options": {
+        "A": "has",
+        "B": "had",
+        "C": "have",
+        "D": "having"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "q-101",
+      "stimulus_id": null,
+      "confidence": 95.2,
+      "issues": []
+    },
+    {
+      "number": 102,
+      "part": "Part 5 - Phần 5",
+      "text": "Requests for additional days off are by Ms. Chung in Human Resources _____.",
+      "options": {
+        "A": "approved",
+        "B": "dropped",
+        "C": "reached",
+        "D": "reminded"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "q-102",
+      "stimulus_id": null,
+      "confidence": 95.2,
+      "issues": []
+    },
+    {
+      "number": 103,
+      "part": "Part 5 - Phần 5",
+      "text": "The programmers have a list of changes the next software update _____.",
+      "options": {
+        "A": "between",
+        "B": "of",
+        "C": "for",
+        "D": "above"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "q-103",
+      "stimulus_id": null,
+      "confidence": 95.2,
+      "issues": []
+    },
+    {
+      "number": 104,
+      "part": "Part 5 - Phần 5",
+      "text": "Let Farida Banquet Service professional catering for your important corporate events _____.",
+      "options": {
+        "A": "providing",
+        "B": "provide",
+        "C": "provides",
+        "D": "to provide 140"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "q-104",
+      "stimulus_id": null,
+      "confidence": 95.2,
+      "issues": []
+    },
+    {
+      "number": 105,
+      "part": "Part 5 - Phần 5",
+      "text": "Using various innovative techniques, Boyd Industries has improved the of its tiles _____.",
+      "options": {
+        "A": "closure",
+        "B": "product",
+        "C": "quality",
+        "D": "method"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "q-105",
+      "stimulus_id": null,
+      "confidence": 95.2,
+      "issues": []
+    },
+    {
+      "number": 106,
+      "part": "Part 5 - Phần 5",
+      "text": "of all cosmetics are final, and refunds will not be given under any circumstances _____.",
+      "options": {
+        "A": "Sale",
+        "B": "Sales",
+        "C": "Sells",
+        "D": "Selling"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "q-106",
+      "stimulus_id": null,
+      "confidence": 95.2,
+      "issues": []
+    },
+    {
+      "number": 107,
+      "part": "Part 5 - Phần 5",
+      "text": "If you have already submitted your response, no action is required _____.",
+      "options": {
+        "A": "bright",
+        "B": "further",
+        "C": "previous",
+        "D": "average"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "q-107",
+      "stimulus_id": null,
+      "confidence": 95.2,
+      "issues": []
+    },
+    {
+      "number": 108,
+      "part": "Part 5 - Phần 5",
+      "text": "Ms. Sieglak stated that the app design was based on own research _____.",
+      "options": {
+        "A": "she",
+        "B": "hers",
+        "C": "her",
+        "D": "herself"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "q-108",
+      "stimulus_id": null,
+      "confidence": 95.2,
+      "issues": []
+    },
+    {
+      "number": 109,
+      "part": "Part 5 - Phần 5",
+      "text": "109 the organization has doubled its outreach efforts, it has yet to see an increase in new clients _____.",
+      "options": {
+        "A": "Until",
+        "B": "Because",
+        "C": "A lthough",
+        "D": "Therefore"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "q-109",
+      "stimulus_id": null,
+      "confidence": 94.1,
+      "issues": [
+        "question_recovered_from_options"
+      ]
+    },
+    {
+      "number": 110,
+      "part": "Part 5 - Phần 5",
+      "text": "Starting on October 8, board of education meetings will be streamed live on the school Web site _____.",
+      "options": {
+        "A": "all",
+        "B": "so",
+        "C": "that",
+        "D": "to"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "q-110",
+      "stimulus_id": null,
+      "confidence": 94.1,
+      "issues": []
+    },
+    {
+      "number": 111,
+      "part": "Part 5 - Phần 5",
+      "text": "The hairstylists at Urbanite Salon have experience working with a variety of hair products _____.",
+      "options": {
+        "A": "considers",
+        "B": "considerable",
+        "C": "considerate",
+        "D": "considering"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "q-111",
+      "stimulus_id": null,
+      "confidence": 94.1,
+      "issues": []
+    },
+    {
+      "number": 112,
+      "part": "Part 5 - Phần 5",
+      "text": "Both candidates are _____ suitable for the assistant manager position.",
+      "options": {
+        "A": "permanently",
+        "B": "promptly",
+        "C": "equally",
+        "D": "gradually"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "q-112",
+      "stimulus_id": null,
+      "confidence": 94.1,
+      "issues": []
+    },
+    {
+      "number": 113,
+      "part": "Part 5 - Phần 5",
+      "text": "With the acquisition of Bloom Circuit, Wellstrom Hardware has expanded its offerings and services _____.",
+      "options": {
+        "A": "greater",
+        "B": "greatness",
+        "C": "great",
+        "D": "greatly"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "q-113",
+      "stimulus_id": null,
+      "confidence": 94.1,
+      "issues": []
+    },
+    {
+      "number": 114,
+      "part": "Part 5 - Phần 5",
+      "text": "Please note that file names should not capital letters or spaces _____.",
+      "options": {
+        "A": "differ",
+        "B": "contain",
+        "C": "match",
+        "D": "pick"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "q-114",
+      "stimulus_id": null,
+      "confidence": 94.1,
+      "issues": []
+    },
+    {
+      "number": 115,
+      "part": "Part 5 - Phần 5",
+      "text": "The Sun-Tech ceiling fan has received more than 15, 000 five _____ star reviews from customers.",
+      "options": {
+        "A": "satisfied",
+        "B": "checked",
+        "C": "adjusted",
+        "D": "allowed"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "q-115",
+      "stimulus_id": null,
+      "confidence": 94.1,
+      "issues": []
+    },
+    {
+      "number": 116,
+      "part": "Part 5 - Phần 5",
+      "text": "Please the Returns section of our Web site if you are unhappy with any part of your order _____.",
+      "options": {
+        "A": "visit",
+        "B": "visits",
+        "C": "visited",
+        "D": "visiting"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "q-116",
+      "stimulus_id": null,
+      "confidence": 94.1,
+      "issues": []
+    },
+    {
+      "number": 117,
+      "part": "Part 5 - Phần 5",
+      "text": "Ito A uto Group is offering excellent on pre _____ owned vehicles this month.",
+      "options": {
+        "A": "trips",
+        "B": "reasons",
+        "C": "customs",
+        "D": "deals"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "q-117",
+      "stimulus_id": null,
+      "confidence": 94.1,
+      "issues": []
+    },
+    {
+      "number": 118,
+      "part": "Part 5 - Phần 5",
+      "text": "Product prices are influenced such factors as consumer demand and retail competition _____.",
+      "options": {
+        "A": "by",
+        "B": "under",
+        "C": "those",
+        "D": "nearly"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "q-118",
+      "stimulus_id": null,
+      "confidence": 94.1,
+      "issues": []
+    },
+    {
+      "number": 119,
+      "part": "Part 5 - Phần 5",
+      "text": "Monmouth Enterprises will be _____ prefabricated houses online starting on A pril 1.",
+      "options": {
+        "A": "predicting",
+        "B": "passing",
+        "C": "retaining",
+        "D": "marketing"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "q-119",
+      "stimulus_id": null,
+      "confidence": 94.1,
+      "issues": []
+    },
+    {
+      "number": 120,
+      "part": "Part 5 - Phần 5",
+      "text": "A ll employees should familiarize with the company’s policies and procedures _____.",
+      "options": {
+        "A": "their",
+        "B": "them",
+        "C": "theirs",
+        "D": "themselves TESTS 141"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "q-120",
+      "stimulus_id": null,
+      "confidence": 94.1,
+      "issues": []
+    },
+    {
+      "number": 121,
+      "part": "Part 5 - Phần 5",
+      "text": "Custom furniture orders require a 50 percent deposit the time of the order _____.",
+      "options": {
+        "A": "as",
+        "B": "off",
+        "C": "into",
+        "D": "at"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "q-121",
+      "stimulus_id": null,
+      "confidence": 93.9,
+      "issues": []
+    },
+    {
+      "number": 122,
+      "part": "Part 5 - Phần 5",
+      "text": "We are planning a for the Klemner Corporation's twentieth anniversary _____.",
+      "options": {
+        "A": "celebration",
+        "B": "celebrated",
+        "C": "celebrity",
+        "D": "celebrate"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "q-122",
+      "stimulus_id": null,
+      "confidence": 93.9,
+      "issues": []
+    },
+    {
+      "number": 123,
+      "part": "Part 5 - Phần 5",
+      "text": "Though she lacks political experience, Ms. Diaz has been impressive in her first term as mayor _____.",
+      "options": {
+        "A": "quite",
+        "B": "soon",
+        "C": "ever",
+        "D": "next"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "q-123",
+      "stimulus_id": null,
+      "confidence": 93.9,
+      "issues": []
+    },
+    {
+      "number": 124,
+      "part": "Part 5 - Phần 5",
+      "text": "The university library usually acquires _____ copies of best-selling books to meet students’ demand.",
+      "options": {
+        "A": "multiply",
+        "B": "multiple",
+        "C": "multiples",
+        "D": "multiplicity"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "q-124",
+      "stimulus_id": null,
+      "confidence": 93.9,
+      "issues": []
+    },
+    {
+      "number": 125,
+      "part": "Part 5 - Phần 5",
+      "text": "This year’s conference tote bags were donated by Etani Designs _____.",
+      "options": {
+        "A": "generous",
+        "B": "generosity",
+        "C": "generously",
+        "D": "generosities 142"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "q-125",
+      "stimulus_id": null,
+      "confidence": 93.9,
+      "issues": []
+    },
+    {
+      "number": 126,
+      "part": "Part 5 - Phần 5",
+      "text": "We will be holding a on Friday to honor the 30-year engineering career of Mr. Kuan _____.",
+      "options": {
+        "A": "record",
+        "B": "share",
+        "C": "reception",
+        "D": "place"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "q-126",
+      "stimulus_id": null,
+      "confidence": 93.9,
+      "issues": []
+    },
+    {
+      "number": 127,
+      "part": "Part 5 - Phần 5",
+      "text": "Groove Background creates soothing playlists of instrumental music _____ classical and jazz.",
+      "options": {
+        "A": "instead",
+        "B": "including",
+        "C": "in addition",
+        "D": "indeed"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "q-127",
+      "stimulus_id": null,
+      "confidence": 93.9,
+      "issues": []
+    },
+    {
+      "number": 128,
+      "part": "Part 5 - Phần 5",
+      "text": "Members of the finance department to Mr. Chua’s lecture on risk avoidance _____.",
+      "options": {
+        "A": "to be invited",
+        "B": "inviting",
+        "C": "invite",
+        "D": "are invited"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "q-128",
+      "stimulus_id": null,
+      "confidence": 93.9,
+      "issues": []
+    },
+    {
+      "number": 129,
+      "part": "Part 5 - Phần 5",
+      "text": "The board of trustees debated for hours the revised hiring policies _____.",
+      "options": {
+        "A": "during",
+        "B": "above",
+        "C": "over",
+        "D": "across"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "q-129",
+      "stimulus_id": null,
+      "confidence": 93.9,
+      "issues": []
+    },
+    {
+      "number": 130,
+      "part": "Part 5 - Phần 5",
+      "text": "The participants closely the fitness movements tend to learn the proper technique more quickly _____.",
+      "options": {
+        "A": "imitate",
+        "B": "imitations",
+        "C": "imitative",
+        "D": "imitating"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "q-130",
+      "stimulus_id": null,
+      "confidence": 93.9,
+      "issues": []
+    },
+    {
+      "number": 131,
+      "part": "Part 6 - Phần 6",
+      "text": "",
+      "options": {
+        "A": "manufacturing",
+        "B": "hiring",
+        "C": "political",
+        "D": "sporting"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-131-134",
+      "stimulus_id": "reading-131-134",
+      "confidence": 94.1,
+      "issues": []
+    },
+    {
+      "number": 132,
+      "part": "Part 6 - Phần 6",
+      "text": "",
+      "options": {
+        "A": "If not",
+        "B": "A fter all",
+        "C": "A dditionally",
+        "D": "For example"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-131-134",
+      "stimulus_id": "reading-131-134",
+      "confidence": 94.1,
+      "issues": []
+    },
+    {
+      "number": 133,
+      "part": "Part 6 - Phần 6",
+      "text": "",
+      "options": {
+        "A": "Its grand opening is scheduled for mid-November.",
+        "B": "Most applicants had prior experience",
+        "C": "Its appointment of Linda Okumu as its CEO has surprised analysts.",
+        "D": "Local competitors cannot match its prices."
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-131-134",
+      "stimulus_id": "reading-131-134",
+      "confidence": 94.1,
+      "issues": []
+    },
+    {
+      "number": 134,
+      "part": "Part 6 - Phần 6",
+      "text": "",
+      "options": {
+        "A": "attending",
+        "B": "to attend",
+        "C": "attended",
+        "D": "are attending TESTS 143"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-131-134",
+      "stimulus_id": "reading-131-134",
+      "confidence": 94.1,
+      "issues": []
+    },
+    {
+      "number": 135,
+      "part": "Part 6 - Phần 6",
+      "text": "",
+      "options": {
+        "A": "tried",
+        "B": "recommend",
+        "C": "consider",
+        "D": "started"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-135-138",
+      "stimulus_id": "reading-135-138",
+      "confidence": 95.2,
+      "issues": []
+    },
+    {
+      "number": 136,
+      "part": "Part 6 - Phần 6",
+      "text": "",
+      "options": {
+        "A": "Our filtration system will be redesigned within the next year.",
+        "B": "Water use may be reduced by running your dishwasher less frequently.",
+        "C": "To do this, run cool tap water through the filter for three minutes.",
+        "D": "There are 150 liters of water in the main storage tank at all times. 144"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-135-138",
+      "stimulus_id": "reading-135-138",
+      "confidence": 95.2,
+      "issues": []
+    },
+    {
+      "number": 137,
+      "part": "Part 6 - Phần 6",
+      "text": "",
+      "options": {
+        "A": "extremely",
+        "B": "highly",
+        "C": "tightly",
+        "D": "steadily"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-135-138",
+      "stimulus_id": "reading-135-138",
+      "confidence": 95.2,
+      "issues": []
+    },
+    {
+      "number": 138,
+      "part": "Part 6 - Phần 6",
+      "text": "",
+      "options": {
+        "A": "diminished",
+        "B": "diminishes",
+        "C": "diminish",
+        "D": "diminishable"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-135-138",
+      "stimulus_id": "reading-135-138",
+      "confidence": 95.2,
+      "issues": []
+    },
+    {
+      "number": 139,
+      "part": "Part 6 - Phần 6",
+      "text": "",
+      "options": {
+        "A": "condition",
+        "B": "object",
+        "C": "explanation",
+        "D": "preview"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-139-142",
+      "stimulus_id": "reading-139-142",
+      "confidence": 95.2,
+      "issues": []
+    },
+    {
+      "number": 140,
+      "part": "Part 6 - Phần 6",
+      "text": "",
+      "options": {
+        "A": "asked",
+        "B": "is asking",
+        "C": "has asked",
+        "D": "will ask"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-139-142",
+      "stimulus_id": "reading-139-142",
+      "confidence": 95.2,
+      "issues": []
+    },
+    {
+      "number": 141,
+      "part": "Part 6 - Phần 6",
+      "text": "",
+      "options": {
+        "A": "Our employees have software training and are skilled at resolving problems.",
+        "B": "To cancel a furniture delivery, please call within 24 hours of ordering.",
+        "C": "When you send back the product, be sure to include the authorization code",
+        "D": "The catalog has sections for kitchen goods, lighting, appliances, and more"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-139-142",
+      "stimulus_id": "reading-139-142",
+      "confidence": 95.2,
+      "issues": []
+    },
+    {
+      "number": 142,
+      "part": "Part 6 - Phần 6",
+      "text": "",
+      "options": {
+        "A": "responsibly",
+        "B": "responsible",
+        "C": "responsibility",
+        "D": "responsibleness TESTS 145"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-139-142",
+      "stimulus_id": "reading-139-142",
+      "confidence": 95.2,
+      "issues": []
+    },
+    {
+      "number": 143,
+      "part": "Part 6 - Phần 6",
+      "text": "",
+      "options": {
+        "A": "145.",
+        "B": "However",
+        "C": "Otherwise",
+        "D": "In that case 144"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-143-146",
+      "stimulus_id": "reading-143-146",
+      "confidence": 95.1,
+      "issues": []
+    },
+    {
+      "number": 144,
+      "part": "Part 6 - Phần 6",
+      "text": "",
+      "options": {
+        "A": "itself",
+        "B": "his",
+        "C": "whose",
+        "D": "everyone"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-144-148",
+      "stimulus_id": "reading-144-148",
+      "confidence": 94.0,
+      "issues": []
+    },
+    {
+      "number": 145,
+      "part": "Part 6 - Phần 6",
+      "text": "",
+      "options": {
+        "A": "sessions",
+        "B": "positions",
+        "C": "conferences",
+        "D": "competitions"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-144-148",
+      "stimulus_id": "reading-144-148",
+      "confidence": 93.9,
+      "issues": []
+    },
+    {
+      "number": 146,
+      "part": "Part 6 - Phần 6",
+      "text": "",
+      "options": {
+        "A": "Cyberattacks are on the rise.",
+        "B": "The training is held each summer.",
+        "C": "Please make every effort to sign up.",
+        "D": "Last year’s program was canceled."
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-144-148",
+      "stimulus_id": "reading-144-148",
+      "confidence": 95.3,
+      "issues": []
+    },
+    {
+      "number": 147,
+      "part": "Part 7 - Phần 7",
+      "text": "What types of products are being advertised?",
+      "options": {
+        "A": "Camping gear",
+        "B": "Household items",
+        "C": "Office equipment",
+        "D": "A utomobile accessories"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-147-148",
+      "stimulus_id": "reading-147-148",
+      "confidence": 95.0,
+      "issues": []
+    },
+    {
+      "number": 148,
+      "part": "Part 7 - Phần 7",
+      "text": "What is indicated about the company?",
+      "options": {
+        "A": "It has been in business for two years",
+        "B": "It accepts product returns.",
+        "C": "It has same-day delivery.",
+        "D": "It has a yearly sale. TEST5 147"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-147-148",
+      "stimulus_id": "reading-147-148",
+      "confidence": 95.0,
+      "issues": []
+    },
+    {
+      "number": 149,
+      "part": "Part 7 - Phần 7",
+      "text": "What is the purpose of the e-mail?",
+      "options": {
+        "A": "To confirm shipment of an order",
+        "B": "To acknowledge the return of an order",
+        "C": "To provide alternatives for an order",
+        "D": "To thank a customer for placing an order 148"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-149-150",
+      "stimulus_id": "reading-149-150",
+      "confidence": 94.7,
+      "issues": []
+    },
+    {
+      "number": 150,
+      "part": "Part 7 - Phần 7",
+      "text": "What color bag is currently NOT available?",
+      "options": {
+        "A": "The light blue one",
+        "B": "The dark green one",
+        "C": "The dark gray one",
+        "D": "The light gray one"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-149-150",
+      "stimulus_id": "reading-149-150",
+      "confidence": 95.2,
+      "issues": []
+    },
+    {
+      "number": 151,
+      "part": "Part 7 - Phần 7",
+      "text": "What is suggested about Mr. Nomura?",
+      "options": {
+        "A": "He does not usually work on Tuesdays.",
+        "B": "He shares an office with Ms. Moroff.",
+        "C": "He recently purchased office supplies.",
+        "D": "He works off-site one day a week."
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-151-152",
+      "stimulus_id": "reading-151-152",
+      "confidence": 93.7,
+      "issues": []
+    },
+    {
+      "number": 152,
+      "part": "Part 7 - Phần 7",
+      "text": "At 9:51 a.m., what does Mr. Nomura most likely mean when he writes, “Check with Cheryl”?",
+      "options": {
+        "A": "Cheryl may have extra binders.",
+        "B": "Cheryl must approve a purchase.",
+        "C": "Cheryl will be able to locate Frank.",
+        "D": "Cheryl knows when a delivery will arrive. TESTS 149"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-151-152",
+      "stimulus_id": "reading-151-152",
+      "confidence": 93.7,
+      "issues": []
+    },
+    {
+      "number": 153,
+      "part": "Part 7 - Phần 7",
+      "text": "What is indicated about Ms. Wilkes?",
+      "options": {
+        "A": "She has another account with Cortica Bank.",
+        "B": "She plans to open an investment account.",
+        "C": "She has lost a debit card.",
+        "D": "She placed an order for checks. 150"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-153-154",
+      "stimulus_id": "reading-153-154",
+      "confidence": 93.8,
+      "issues": []
+    },
+    {
+      "number": 154,
+      "part": "Part 7 - Phần 7",
+      "text": "How will the bank most likely contact Ms. Wilkes?",
+      "options": {
+        "A": "By e-mail",
+        "B": "By text message",
+        "C": "By telephone",
+        "D": "By letter"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-153-154",
+      "stimulus_id": "reading-153-154",
+      "confidence": 93.8,
+      "issues": []
+    },
+    {
+      "number": 155,
+      "part": "Part 7 - Phần 7",
+      "text": "What is suggested about Jones-Richmond Construction?",
+      "options": {
+        "A": "It is a new company.",
+        "B": "It has won industry awards for its work.",
+        "C": "It is based in Winnipeg.",
+        "D": "It specializes in home construction projects."
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-155-157",
+      "stimulus_id": "reading-155-157",
+      "confidence": 94.5,
+      "issues": []
+    },
+    {
+      "number": 156,
+      "part": "Part 7 - Phần 7",
+      "text": "What is NOT listed as a responsibility of the construction superintendent?",
+      "options": {
+        "A": "Setting schedules",
+        "B": "Training inexperienced workers",
+        "C": "Participating in contract discussions",
+        "D": "Ensuring worker safety"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-155-157",
+      "stimulus_id": "reading-155-157",
+      "confidence": 94.5,
+      "issues": []
+    },
+    {
+      "number": 157,
+      "part": "Part 7 - Phần 7",
+      "text": "A ccording to the advertisement, what must a successful job applicant have?",
+      "options": {
+        "A": "A technical certification",
+        "B": "A reference letter from a former employer",
+        "C": "Senior management experience",
+        "D": "The ability to visit construction sites each workday TESTS 151"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-155-157",
+      "stimulus_id": "reading-155-157",
+      "confidence": 94.5,
+      "issues": []
+    },
+    {
+      "number": 158,
+      "part": "Part 7 - Phần 7",
+      "text": "What is mentioned as a benefit of the new payment system?",
+      "options": {
+        "A": "It will reduce Mr. Sledge’s workload.",
+        "B": "It will include more staff involvement.",
+        "C": "It will simplify tax collection.",
+        "D": "It will result in fewer payment errors."
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-158-160",
+      "stimulus_id": "reading-158-160",
+      "confidence": 92.0,
+      "issues": []
+    },
+    {
+      "number": 159,
+      "part": "Part 7 - Phần 7",
+      "text": "What does Mr. Sledge ask employees to do?",
+      "options": {
+        "A": "Update their contact information",
+        "B": "Submit ideas on how to improve the m",
+        "C": "Provide information about their bank account",
+        "D": "Sign up for a professional development class 152"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-158-160",
+      "stimulus_id": "reading-158-160",
+      "confidence": 95.8,
+      "issues": []
+    },
+    {
+      "number": 160,
+      "part": "Part 7 - Phần 7",
+      "text": "In which of the positions marked [1], [2], [3], and [4] does the following sentence best belong? “If not around, please see my assistant.”",
+      "options": {
+        "A": "[1]",
+        "B": "[2]",
+        "C": "[3]",
+        "D": "[4]"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-158-160",
+      "stimulus_id": "reading-158-160",
+      "confidence": 92.0,
+      "issues": []
+    },
+    {
+      "number": 161,
+      "part": "Part 7 - Phần 7",
+      "text": "The word “top” in paragraph 1, line 3, is closest in meaning to",
+      "options": {
+        "A": "only",
+        "B": "leading",
+        "C": "highest",
+        "D": "modern"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-161-163",
+      "stimulus_id": "reading-161-163",
+      "confidence": 94.4,
+      "issues": []
+    },
+    {
+      "number": 162,
+      "part": "Part 7 - Phần 7",
+      "text": "Who will NOT be conducting informational presentations at the fair?",
+      "options": {
+        "A": "Chefs",
+        "B": "Coffee growers",
+        "C": "Equipment makers",
+        "D": "Coffeehouse owners"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-161-163",
+      "stimulus_id": "reading-161-163",
+      "confidence": 94.4,
+      "issues": []
+    },
+    {
+      "number": 163,
+      "part": "Part 7 - Phần 7",
+      "text": "What must people do to attend the fair?",
+      "options": {
+        "A": "Sign up on a Web site",
+        "B": "Call to make a reservation",
+        "C": "Buy a ticket at the event location",
+        "D": "Present a Homewares product receipt"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-161-163",
+      "stimulus_id": "reading-161-163",
+      "confidence": 94.9,
+      "issues": []
+    },
+    {
+      "number": 164,
+      "part": "Part 7 - Phần 7",
+      "text": "What is the purpose of the e-mail?",
+      "options": {
+        "A": "To advertise some new pastries",
+        "B": "To present options for an event",
+        "C": "To recommend serving a larger cake",
+        "D": "To request payment on an order"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-164-167",
+      "stimulus_id": "reading-164-167",
+      "confidence": 93.4,
+      "issues": []
+    },
+    {
+      "number": 165,
+      "part": "Part 7 - Phần 7",
+      "text": "What does Ms. Luhya indicate about the mini cheesecakes?",
+      "options": {
+        "A": "They are the most expensive dessert.",
+        "B": "They are available in several flavors.",
+        "C": "They should not be unrefrigerated for a long time.",
+        "D": "They cannot be ordered in larger sizes. 154"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-164-167",
+      "stimulus_id": "reading-164-167",
+      "confidence": 93.4,
+      "issues": []
+    },
+    {
+      "number": 166,
+      "part": "Part 7 - Phần 7",
+      "text": "The word “disturbing” in paragraph 2, line 6, is closest in meaning to",
+      "options": {
+        "A": "interrupting",
+        "B": "frightening",
+        "C": "rearranging",
+        "D": "moving"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-164-167",
+      "stimulus_id": "reading-164-167",
+      "confidence": 93.4,
+      "issues": []
+    },
+    {
+      "number": 167,
+      "part": "Part 7 - Phần 7",
+      "text": "What information does Ms. Luhya request from Ms. Otero?",
+      "options": {
+        "A": "A street address",
+        "B": "An approximate budget",
+        "C": "The name of a caterer",
+        "D": "The number of guests"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-164-167",
+      "stimulus_id": "reading-164-167",
+      "confidence": 93.4,
+      "issues": []
+    },
+    {
+      "number": 168,
+      "part": "Part 7 - Phần 7",
+      "text": "What is indicated about Candella Interior Design?",
+      "options": {
+        "A": "Its main office is located in a major city.",
+        "B": "Its staff members visit clients’ houses.",
+        "C": "It has been in business longer than its competitors have been.",
+        "D": "It is a family-run business."
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-168-171",
+      "stimulus_id": "reading-168-171",
+      "confidence": 94.1,
+      "issues": []
+    },
+    {
+      "number": 169,
+      "part": "Part 7 - Phần 7",
+      "text": "Why does Ms. Futrel want to redecorate her apartment?",
+      "options": {
+        "A": "To prepare for a visit from relatives",
+        "B": "To make it attractive to potential buyers",
+        "C": "To replace furniture that she dislikes",
+        "D": "To use it as an example for her clients"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-168-171",
+      "stimulus_id": "reading-168-171",
+      "confidence": 95.5,
+      "issues": []
+    },
+    {
+      "number": 170,
+      "part": "Part 7 - Phần 7",
+      "text": "What will happen on July 1 ?",
+      "options": {
+        "A": "Room accessories will be distributed.",
+        "B": "Work will begin on a new project.",
+        "C": "The client list will be expanded.",
+        "D": "A special offer will end."
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-168-171",
+      "stimulus_id": "reading-168-171",
+      "confidence": 94.1,
+      "issues": []
+    },
+    {
+      "number": 171,
+      "part": "Part 7 - Phần 7",
+      "text": "In which of the positions marked [1], [2], [3], and [4] does the following sentence best belong? “The answers will give us a sense of your taste and requirements.”",
+      "options": {
+        "A": "[1]",
+        "B": "[2]",
+        "C": "[3]",
+        "D": "[4]"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-168-171",
+      "stimulus_id": "reading-168-171",
+      "confidence": 94.1,
+      "issues": []
+    },
+    {
+      "number": 172,
+      "part": "Part 7 - Phần 7",
+      "text": "Why did Mr. Wilkins contact Ms. Clarke?",
+      "options": {
+        "A": "To recommend a new product",
+        "B": "To discuss a scheduling problem",
+        "C": "To confirm that a bicycle part has been ordered",
+        "D": "To request permission to do some work"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-172-175",
+      "stimulus_id": "reading-172-175",
+      "confidence": 95.2,
+      "issues": []
+    },
+    {
+      "number": 173,
+      "part": "Part 7 - Phần 7",
+      "text": "What most likely cost about $30 ?",
+      "options": {
+        "A": "New braking mechanisms",
+        "B": "Labor charges",
+        "C": "Basic maintenance service",
+        "D": "Drivetrain cleaning 174, At 11:21 a.m., what does Ms. Clarke imply"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-172-175",
+      "stimulus_id": "reading-172-175",
+      "confidence": 94.7,
+      "issues": []
+    },
+    {
+      "number": 174,
+      "part": "Part 7 - Phần 7",
+      "text": "At 11:21 a.m., what does Ms. Clarke imply when she writes, “That much\"?",
+      "options": {
+        "A": "She did not realize how busy Mr. Wilkins is.",
+        "B": "The pressure in her tires was surprisingly low.",
+        "C": "The cost of repairs seems high.",
+        "D": "Repairing the bike will take more time than she expected."
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-172-175",
+      "stimulus_id": "reading-172-175",
+      "confidence": 94.7,
+      "issues": []
+    },
+    {
+      "number": 175,
+      "part": "Part 7 - Phần 7",
+      "text": "What is suggested about Ms. Clarke?",
+      "options": {
+        "A": "She prefers to pay with cash.",
+        "B": "She is shopping for a new bicycle.",
+        "C": "She is unhappy with the quality of a repair.",
+        "D": "She will soon compete in a bicycle race. TESTS 157"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-172-175",
+      "stimulus_id": "reading-172-175",
+      "confidence": 94.7,
+      "issues": []
+    },
+    {
+      "number": 176,
+      "part": "Part 7 - Phần 7",
+      "text": "Who most likely is Ms. Raferty?",
+      "options": {
+        "A": "A job recruiter",
+        "B": "A plumbing contractor",
+        "C": "A Galway historian",
+        "D": "A Web-site designer"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-176-180",
+      "stimulus_id": "reading-176-180",
+      "confidence": 94.6,
+      "issues": []
+    },
+    {
+      "number": 177,
+      "part": "Part 7 - Phần 7",
+      "text": "What is indicated about Mr. Zimri?",
+      "options": {
+        "A": "He is trying to recruit an assistant architect.",
+        "B": "He is a member of Clary Medical Centre’s board of directors.",
+        "C": "He is pleased with his firm's work at a former shoe factory.",
+        "D": "He is waiting for Dr. feedback on a portfolio."
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-176-180",
+      "stimulus_id": "reading-176-180",
+      "confidence": 94.6,
+      "issues": []
+    },
+    {
+      "number": 178,
+      "part": "Part 7 - Phần 7",
+      "text": "A ccording to the Web page, what will happen at the grand opening event?",
+      "options": {
+        "A": "Government officials will be in attendance.",
+        "B": "Sandwiches will be served.",
+        "C": "New building plans will be revealed.",
+        "D": "Former patients will be interviewed."
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-176-180",
+      "stimulus_id": "reading-176-180",
+      "confidence": 94.6,
+      "issues": []
+    },
+    {
+      "number": 179,
+      "part": "Part 7 - Phần 7",
+      "text": "On the Web page, the word “maintain” in paragraph 2, line 3, is closest in meaning to",
+      "options": {
+        "A": "assert",
+        "B": "heal",
+        "C": "support",
+        "D": "preserve"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-176-180",
+      "stimulus_id": "reading-176-180",
+      "confidence": 94.6,
+      "issues": []
+    },
+    {
+      "number": 180,
+      "part": "Part 7 - Phần 7",
+      "text": "A ccording to the Web page, what is NOT part of the Clary Clinic?",
+      "options": {
+        "A": "A medical laboratory",
+        "B": "A pharmacy",
+        "C": "Medical imaging equipment",
+        "D": "Offices for clinicians TESTS 159"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-176-180",
+      "stimulus_id": "reading-176-180",
+      "confidence": 94.6,
+      "issues": []
+    },
+    {
+      "number": 181,
+      "part": "Part 7 - Phần 7",
+      "text": "Why does Pirate’s Bounty Seafood need to purchase new equipment?",
+      "options": {
+        "A": "Its current refrigerator stopped working",
+        "B": "The warranty on its current refrigerator has expired.",
+        "C": "The restaurant is increasing in size.",
+        "D": "The restaurant is moving to a new location."
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-181-185",
+      "stimulus_id": "reading-181-185",
+      "confidence": 93.4,
+      "issues": []
+    },
+    {
+      "number": 182,
+      "part": "Part 7 - Phần 7",
+      "text": "What is the problem with the item Ms. Okiya ordered?",
+      "options": {
+        "A": "It was lost during shipping.",
+        "B": "It has been discontinued.",
+        "C": "It is temporarily out of stock.",
+        "D": "It has a damaged control panel."
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-181-185",
+      "stimulus_id": "reading-181-185",
+      "confidence": 93.4,
+      "issues": []
+    },
+    {
+      "number": 183,
+      "part": "Part 7 - Phần 7",
+      "text": "What is NOT a feature of the Blizzard BF600 ?",
+      "options": {
+        "A": "It has a fast-freeze switch.",
+        "B": "It has adjustable shelves.",
+        "C": "It has aluminum flooring.",
+        "D": "It has galvanized steel panels."
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-181-185",
+      "stimulus_id": "reading-181-185",
+      "confidence": 93.4,
+      "issues": []
+    },
+    {
+      "number": 184,
+      "part": "Part 7 - Phần 7",
+      "text": "A ccording to the e-mail, what does the BF400 model come with?",
+      "options": {
+        "A": "A user manual",
+        "B": "A remote control",
+        "C": "A warranty",
+        "D": "A tax waiver"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-181-185",
+      "stimulus_id": "reading-181-185",
+      "confidence": 93.4,
+      "issues": []
+    },
+    {
+      "number": 185,
+      "part": "Part 7 - Phần 7",
+      "text": "In the e-mail, the word “Just” in paragraph 3, line 1, is closest in meaning to",
+      "options": {
+        "A": "immediately",
+        "B": "kindly",
+        "C": "shortly",
+        "D": "simply TESTS 161"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-181-185",
+      "stimulus_id": "reading-181-185",
+      "confidence": 93.4,
+      "issues": []
+    },
+    {
+      "number": 186,
+      "part": "Part 7 - Phần 7",
+      "text": "What is mentioned on the schedule?",
+      "options": {
+        "A": "Free breakfast is available for conference participants.",
+        "B": "The conference is five days long.",
+        "C": "A keynote address will be delivered at the end of the first day.",
+        "D": "A featured speaker has been replaced."
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-186-190",
+      "stimulus_id": "reading-186-190",
+      "confidence": 94.7,
+      "issues": []
+    },
+    {
+      "number": 187,
+      "part": "Part 7 - Phần 7",
+      "text": "A ccording to the schedule, what will happen at 10:30 a.m.?",
+      "options": {
+        "A": "A writer will give a presentation.",
+        "B": "Coffee will be served in the lobby.",
+        "C": "Lunch tickets will be sold in room 10.",
+        "D": "A revised schedule will be distributed."
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-186-190",
+      "stimulus_id": "reading-186-190",
+      "confidence": 94.7,
+      "issues": []
+    },
+    {
+      "number": 188,
+      "part": "Part 7 - Phần 7",
+      "text": "What can be concluded about Mr. Dzik?",
+      "options": {
+        "A": "He wants a marketing video to be shortened.",
+        "B": "He has asked Mr. Kalwar for a new marketing plan.",
+        "C": "He organized a conference in London.",
+        "D": "He hired Mr. Secada’s firm for a project."
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-186-190",
+      "stimulus_id": "reading-186-190",
+      "confidence": 94.7,
+      "issues": []
+    },
+    {
+      "number": 189,
+      "part": "Part 7 - Phần 7",
+      "text": "What is suggested about Mr. Kalwar?",
+      "options": {
+        "A": "He is a videographer.",
+        "B": "He works in Germany.",
+        "C": "He is planning to buy a house in Sheffield.",
+        "D": "He specializes in construction materials."
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-186-190",
+      "stimulus_id": "reading-186-190",
+      "confidence": 94.7,
+      "issues": []
+    },
+    {
+      "number": 190,
+      "part": "Part 7 - Phần 7",
+      "text": "What does the article indicate about the house created with a 3-D printer?",
+      "options": {
+        "A": "It cost £150,000 to build.",
+        "B": "It was finished in two months.",
+        "C": "It will be landscaped next week.",
+        "D": "Its bedrooms are all the same size. TESTS 163"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-186-190",
+      "stimulus_id": "reading-186-190",
+      "confidence": 94.7,
+      "issues": []
+    },
+    {
+      "number": 191,
+      "part": "Part 7 - Phần 7",
+      "text": "What is stated in the job posting about the managerial position?",
+      "options": {
+        "A": "It is fully on-site.",
+        "B": "It is Mr. Lahiri’s current job.",
+        "C": "It requires sales experience.",
+        "D": "It will be part-time until A pril 1."
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-191-195",
+      "stimulus_id": "reading-191-195",
+      "confidence": 94.5,
+      "issues": []
+    },
+    {
+      "number": 192,
+      "part": "Part 7 - Phần 7",
+      "text": "A ccording to the flyer, what will happen on May 1?",
+      "options": {
+        "A": "A public arts program will begin.",
+        "B": "A city council meeting will take place.",
+        "C": "A new art gallery will hold a grand opening.",
+        "D": "Regents Bank will be closed for the day"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-191-195",
+      "stimulus_id": "reading-191-195",
+      "confidence": 94.5,
+      "issues": []
+    },
+    {
+      "number": 193,
+      "part": "Part 7 - Phần 7",
+      "text": "What is suggested about A shland Pottery and Crafts?",
+      "options": {
+        "A": "It is located near the Wye River.",
+        "B": "It specializes in virtual art.",
+        "C": "It hosts pottery workshops every Saturday.",
+        "D": "It is sponsoring a summer movie series"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-191-195",
+      "stimulus_id": "reading-191-195",
+      "confidence": 94.5,
+      "issues": []
+    },
+    {
+      "number": 194,
+      "part": "Part 7 - Phần 7",
+      "text": "What is suggested about Geetu Gelang?",
+      "options": {
+        "A": "She is a local musician.",
+        "B": "She will be selling her crafts on May 1",
+        "C": "She plans to start a social media account.",
+        "D": "She was recently hired by the Richard Lahiri Gallery."
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-191-195",
+      "stimulus_id": "reading-191-195",
+      "confidence": 94.5,
+      "issues": []
+    },
+    {
+      "number": 195,
+      "part": "Part 7 - Phần 7",
+      "text": "A ccording to the article, where is Brady Park located?",
+      "options": {
+        "A": "In Cromwood",
+        "B": "In Elmhurst",
+        "C": "In Herrontown",
+        "D": "In Melbridge"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-191-195",
+      "stimulus_id": "reading-191-195",
+      "confidence": 94.5,
+      "issues": []
+    },
+    {
+      "number": 196,
+      "part": "Part 7 - Phần 7",
+      "text": "What does Gendalla mainly produce?",
+      "options": {
+        "A": "Watches",
+        "B": "Luggage",
+        "C": "Clothing",
+        "D": "Fragrances"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-196-200",
+      "stimulus_id": "reading-196-200",
+      "confidence": 94.9,
+      "issues": []
+    },
+    {
+      "number": 197,
+      "part": "Part 7 - Phần 7",
+      "text": "A ccording to the article, why is Senano Designs acquiring Gendalla?",
+      "options": {
+        "A": "To sell products at a lower price",
+        "B": "To expand its social media presence",
+        "C": "To offer a more diverse range of products",
+        "D": "To address declining sales in some cities"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-196-200",
+      "stimulus_id": "reading-196-200",
+      "confidence": 94.9,
+      "issues": []
+    },
+    {
+      "number": 198,
+      "part": "Part 7 - Phần 7",
+      "text": "What are Gendalla’s employees invited to do on March 28 ?",
+      "options": {
+        "A": "Suggest changes to a travel policy",
+        "B": "A ttend a meeting in the afternoon",
+        "C": "Tour Senano’s corporate headquarters",
+        "D": "Make an appointment with an accountant"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-196-200",
+      "stimulus_id": "reading-196-200",
+      "confidence": 94.9,
+      "issues": []
+    },
+    {
+      "number": 199,
+      "part": "Part 7 - Phần 7",
+      "text": "Where is Ms. office?",
+      "options": {
+        "A": "In New York",
+        "B": "In Chicago",
+        "C": "In Philadelphia",
+        "D": "In Los A ngeles"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-196-200",
+      "stimulus_id": "reading-196-200",
+      "confidence": 94.9,
+      "issues": []
+    },
+    {
+      "number": 200,
+      "part": "Part 7 - Phần 7",
+      "text": "How is Gendalla’s current travel expense policy likely different from Senano’s?",
+      "options": {
+        "A": "A receipt must be submitted for every expense.",
+        "B": "Preapproval must be obtained for expenses over $50.",
+        "C": "The expense report must be signed by",
+        "D": "Employees can submit their expense reports jointly."
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "reading-196-200",
+      "stimulus_id": "reading-196-200",
+      "confidence": 94.9,
+      "issues": []
+    }
+  ],
+  "stimuli": [
+    {
+      "id": "reading-131-134",
+      "kind": "image",
+      "title": "Questions 131-134 refer to the following article.",
+      "assets": [
+        {
+          "id": "7852c728eeca45cea6a06f394ae9497d.webp",
+          "url": "/api/extractions/rc5-dump/assets/7852c728eeca45cea6a06f394ae9497d.webp",
+          "page": 4,
+          "bbox": [
+            0.07295,
+            0.21716,
+            0.88432,
+            0.72328
+          ],
+          "width": 2013,
+          "height": 1776
+        }
+      ],
+      "question_numbers": [
+        131,
+        132,
+        133,
+        134
+      ],
+      "page_numbers": [
+        4
+      ],
+      "confidence": 45.0,
+      "issues": [
+        "crop_review"
+      ]
+    },
+    {
+      "id": "reading-135-138",
+      "kind": "image",
+      "title": "Questions 135-138 refer to the following instructions.",
+      "assets": [
+        {
+          "id": "5f19743d8685446fa2a6b4cbd7a37848.webp",
+          "url": "/api/extractions/rc5-dump/assets/5f19743d8685446fa2a6b4cbd7a37848.webp",
+          "page": 5,
+          "bbox": [
+            0.0927,
+            0.10259,
+            0.90326,
+            0.25534
+          ],
+          "width": 2011,
+          "height": 536
+        }
+      ],
+      "question_numbers": [
+        135,
+        136,
+        137,
+        138
+      ],
+      "page_numbers": [
+        5
+      ],
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "id": "reading-139-142",
+      "kind": "image",
+      "title": "Questions 139-142 refer to the following policy.",
+      "assets": [
+        {
+          "id": "063ba5b48f3641948e03320bdca5f34b.webp",
+          "url": "/api/extractions/rc5-dump/assets/063ba5b48f3641948e03320bdca5f34b.webp",
+          "page": 6,
+          "bbox": [
+            0.07497,
+            0.10117,
+            0.88835,
+            0.29125
+          ],
+          "width": 2018,
+          "height": 667
+        }
+      ],
+      "question_numbers": [
+        139,
+        140,
+        141,
+        142
+      ],
+      "page_numbers": [
+        6
+      ],
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "id": "reading-143-146",
+      "kind": "image",
+      "title": "Questions 143-146 refer to the following memo.",
+      "assets": [
+        {
+          "id": "662040a6ffea4d979d0324a7bbcb8d8d.webp",
+          "url": "/api/extractions/rc5-dump/assets/662040a6ffea4d979d0324a7bbcb8d8d.webp",
+          "page": 7,
+          "bbox": [
+            0.09029,
+            0.10031,
+            0.90125,
+            0.49786
+          ],
+          "width": 2012,
+          "height": 1395
+        }
+      ],
+      "question_numbers": [
+        143,
+        144,
+        145,
+        146
+      ],
+      "page_numbers": [
+        7
+      ],
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "id": "reading-144-148",
+      "kind": "image",
+      "title": "Questions 144-148 refer to the following document.",
+      "assets": [
+        {
+          "id": "eb3667fb69af43968483a15b3eb28ea9.webp",
+          "url": "/api/extractions/rc5-dump/assets/eb3667fb69af43968483a15b3eb28ea9.webp",
+          "page": 8,
+          "bbox": [
+            0.07215,
+            0.07495,
+            0.88351,
+            0.49587
+          ],
+          "width": 2013,
+          "height": 1477
+        }
+      ],
+      "question_numbers": [
+        144,
+        145,
+        146,
+        147,
+        148
+      ],
+      "page_numbers": [
+        8
+      ],
+      "confidence": 45.0,
+      "issues": [
+        "crop_review"
+      ]
+    },
+    {
+      "id": "reading-147-148",
+      "kind": "image",
+      "title": "Questions 147-148 refer to the following advertisement.",
+      "assets": [
+        {
+          "id": "3c1398f638914999ad46ee28596e904b.webp",
+          "url": "/api/extractions/rc5-dump/assets/3c1398f638914999ad46ee28596e904b.webp",
+          "page": 8,
+          "bbox": [
+            0.16243,
+            0.23083,
+            0.79121,
+            0.38501
+          ],
+          "width": 1560,
+          "height": 541
+        }
+      ],
+      "question_numbers": [
+        147,
+        148
+      ],
+      "page_numbers": [
+        8
+      ],
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "id": "reading-149-150",
+      "kind": "image",
+      "title": "Questions 149-150 refer to the following e-mail.",
+      "assets": [
+        {
+          "id": "39b0713ee63d4d85b3f093de8cdfe049.webp",
+          "url": "/api/extractions/rc5-dump/assets/39b0713ee63d4d85b3f093de8cdfe049.webp",
+          "page": 9,
+          "bbox": [
+            0.13059,
+            0.08977,
+            0.86135,
+            0.48846
+          ],
+          "width": 1813,
+          "height": 1399
+        }
+      ],
+      "question_numbers": [
+        149,
+        150
+      ],
+      "page_numbers": [
+        9
+      ],
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "id": "reading-151-152",
+      "kind": "image",
+      "title": "Questions 151-152 refer to the following text-message chain.",
+      "assets": [
+        {
+          "id": "6f4dc56925fb4128932e3f4665ecf483.webp",
+          "url": "/api/extractions/rc5-dump/assets/6f4dc56925fb4128932e3f4665ecf483.webp",
+          "page": 10,
+          "bbox": [
+            0.25836,
+            0.09404,
+            0.71342,
+            0.46082
+          ],
+          "width": 1129,
+          "height": 1287
+        }
+      ],
+      "question_numbers": [
+        151,
+        152
+      ],
+      "page_numbers": [
+        10
+      ],
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "id": "reading-153-154",
+      "kind": "image",
+      "title": "Questions 153-154 refer to the following form.",
+      "assets": [
+        {
+          "id": "2779a763ebf74eb183491797f00d4c46.webp",
+          "url": "/api/extractions/rc5-dump/assets/2779a763ebf74eb183491797f00d4c46.webp",
+          "page": 11,
+          "bbox": [
+            0.12898,
+            0.09461,
+            0.86457,
+            0.58621
+          ],
+          "width": 1825,
+          "height": 1725
+        }
+      ],
+      "question_numbers": [
+        153,
+        154
+      ],
+      "page_numbers": [
+        11
+      ],
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "id": "reading-155-157",
+      "kind": "image",
+      "title": "Questions 155-157 refer to the following job advertisement.",
+      "assets": [
+        {
+          "id": "5e550567410845ceb23de6315dfc74ca.webp",
+          "url": "/api/extractions/rc5-dump/assets/5e550567410845ceb23de6315dfc74ca.webp",
+          "page": 12,
+          "bbox": [
+            0.16284,
+            0.09347,
+            0.81096,
+            0.44714
+          ],
+          "width": 1608,
+          "height": 1241
+        }
+      ],
+      "question_numbers": [
+        155,
+        156,
+        157
+      ],
+      "page_numbers": [
+        12
+      ],
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "id": "reading-158-160",
+      "kind": "image",
+      "title": "Questions 158-160 refer to the following e-mail.",
+      "assets": [
+        {
+          "id": "526844a7ae0545aebc7441ad6ed23645.webp",
+          "url": "/api/extractions/rc5-dump/assets/526844a7ae0545aebc7441ad6ed23645.webp",
+          "page": 13,
+          "bbox": [
+            0.13422,
+            0.0929,
+            0.86497,
+            0.43431
+          ],
+          "width": 1813,
+          "height": 1198
+        }
+      ],
+      "question_numbers": [
+        158,
+        159,
+        160
+      ],
+      "page_numbers": [
+        13
+      ],
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "id": "reading-161-163",
+      "kind": "image",
+      "title": "Questions 161-163 refer to the following article.",
+      "assets": [
+        {
+          "id": "54811d8ffaf44ee8b0cedd6adce2a633.webp",
+          "url": "/api/extractions/rc5-dump/assets/54811d8ffaf44ee8b0cedd6adce2a633.webp",
+          "page": 14,
+          "bbox": [
+            0.1447,
+            0.09347,
+            0.78073,
+            0.26503
+          ],
+          "width": 1578,
+          "height": 602
+        }
+      ],
+      "question_numbers": [
+        161,
+        162,
+        163
+      ],
+      "page_numbers": [
+        14
+      ],
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "id": "reading-164-167",
+      "kind": "image",
+      "title": "Questions 164-167 refer to the following e-mail.",
+      "assets": [
+        {
+          "id": "9dd3911837ba4ab79e70be2e2d7f338c.webp",
+          "url": "/api/extractions/rc5-dump/assets/9dd3911837ba4ab79e70be2e2d7f338c.webp",
+          "page": 15,
+          "bbox": [
+            0.12938,
+            0.09233,
+            0.86014,
+            0.43802
+          ],
+          "width": 1813,
+          "height": 1213
+        }
+      ],
+      "question_numbers": [
+        164,
+        165,
+        166,
+        167
+      ],
+      "page_numbers": [
+        15
+      ],
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "id": "reading-168-171",
+      "kind": "image",
+      "title": "Questions 168-171 refer to the following e-mail.",
+      "assets": [
+        {
+          "id": "f8b85f56f247411395f9d057e06bd93b.webp",
+          "url": "/api/extractions/rc5-dump/assets/f8b85f56f247411395f9d057e06bd93b.webp",
+          "page": 16,
+          "bbox": [
+            0.12011,
+            0.09404,
+            0.85208,
+            0.49729
+          ],
+          "width": 1816,
+          "height": 1415
+        }
+      ],
+      "question_numbers": [
+        168,
+        169,
+        170,
+        171
+      ],
+      "page_numbers": [
+        16
+      ],
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "id": "reading-172-175",
+      "kind": "image",
+      "title": "Questions 172-175 refer to the following text-message chain.",
+      "assets": [
+        {
+          "id": "c75484455b3c4362bc9e4d3a81ab81b1.webp",
+          "url": "/api/extractions/rc5-dump/assets/c75484455b3c4362bc9e4d3a81ab81b1.webp",
+          "page": 17,
+          "bbox": [
+            0.22451,
+            0.09148,
+            0.76501,
+            0.56113
+          ],
+          "width": 1341,
+          "height": 1648
+        }
+      ],
+      "question_numbers": [
+        172,
+        173,
+        174,
+        175
+      ],
+      "page_numbers": [
+        17
+      ],
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "id": "reading-176-180",
+      "kind": "image",
+      "title": "Questions 176-180 refer to the following e-mail and Web page.",
+      "assets": [
+        {
+          "id": "c6583842164546388facfa4c9799e086.webp",
+          "url": "/api/extractions/rc5-dump/assets/c6583842164546388facfa4c9799e086.webp",
+          "page": 19,
+          "bbox": [
+            0.12737,
+            0.08834,
+            0.8686,
+            0.41864
+          ],
+          "width": 1839,
+          "height": 1159
+        },
+        {
+          "id": "c9b20c1a113043d499ec2874007ccaf2.webp",
+          "url": "/api/extractions/rc5-dump/assets/c9b20c1a113043d499ec2874007ccaf2.webp",
+          "page": 19,
+          "bbox": [
+            0.14833,
+            0.42576,
+            0.84119,
+            0.76176
+          ],
+          "width": 1719,
+          "height": 1179
+        }
+      ],
+      "question_numbers": [
+        176,
+        177,
+        178,
+        179,
+        180
+      ],
+      "page_numbers": [
+        19
+      ],
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "id": "reading-181-185",
+      "kind": "image",
+      "title": "Questions 181-185 refer to the following form and e-mail.",
+      "assets": [
+        {
+          "id": "bdbd34c89ac640728640193f4add835e.webp",
+          "url": "/api/extractions/rc5-dump/assets/bdbd34c89ac640728640193f4add835e.webp",
+          "page": 21,
+          "bbox": [
+            0.14833,
+            0.08891,
+            0.84764,
+            0.52038
+          ],
+          "width": 1735,
+          "height": 1514
+        },
+        {
+          "id": "d9e104686f524aa39db68fa86a10780f.webp",
+          "url": "/api/extractions/rc5-dump/assets/d9e104686f524aa39db68fa86a10780f.webp",
+          "page": 21,
+          "bbox": [
+            0.1314,
+            0.52722,
+            0.86215,
+            0.82616
+          ],
+          "width": 1813,
+          "height": 1049
+        }
+      ],
+      "question_numbers": [
+        181,
+        182,
+        183,
+        184,
+        185
+      ],
+      "page_numbers": [
+        21
+      ],
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "id": "reading-186-190",
+      "kind": "image",
+      "title": "Questions 186-190 refer to the following schedule, e-mail, and article.",
+      "assets": [
+        {
+          "id": "0603e9603cb34961b0a0b7f4e4fc9fbe.webp",
+          "url": "/api/extractions/rc5-dump/assets/0603e9603cb34961b0a0b7f4e4fc9fbe.webp",
+          "page": 23,
+          "bbox": [
+            0.13785,
+            0.09062,
+            0.85127,
+            0.33286
+          ],
+          "width": 1770,
+          "height": 850
+        },
+        {
+          "id": "6d1f7b21bde4485b8ccbe707aec4e6bb.webp",
+          "url": "/api/extractions/rc5-dump/assets/6d1f7b21bde4485b8ccbe707aec4e6bb.webp",
+          "page": 23,
+          "bbox": [
+            0.11205,
+            0.34369,
+            0.8819,
+            0.64149
+          ],
+          "width": 1910,
+          "height": 1045
+        },
+        {
+          "id": "b9919835392441fa91ace8e1ebdd1d10.webp",
+          "url": "/api/extractions/rc5-dump/assets/b9919835392441fa91ace8e1ebdd1d10.webp",
+          "page": 24,
+          "bbox": [
+            0.1443,
+            0.06241,
+            0.81902,
+            0.28926
+          ],
+          "width": 1674,
+          "height": 796
+        }
+      ],
+      "question_numbers": [
+        186,
+        187,
+        188,
+        189,
+        190
+      ],
+      "page_numbers": [
+        23,
+        24
+      ],
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "id": "reading-191-195",
+      "kind": "image",
+      "title": "Questions 191-195 refer to the following job posting, flyer, and article.",
+      "assets": [
+        {
+          "id": "bebef7ba9fa24c718cc3d28887479886.webp",
+          "url": "/api/extractions/rc5-dump/assets/bebef7ba9fa24c718cc3d28887479886.webp",
+          "page": 25,
+          "bbox": [
+            0.13986,
+            0.09262,
+            0.85046,
+            0.22143
+          ],
+          "width": 1763,
+          "height": 452
+        },
+        {
+          "id": "2eeee3bd131c44be8bda2b114555ae96.webp",
+          "url": "/api/extractions/rc5-dump/assets/2eeee3bd131c44be8bda2b114555ae96.webp",
+          "page": 25,
+          "bbox": [
+            0.11004,
+            0.23511,
+            0.88231,
+            0.4403
+          ],
+          "width": 1916,
+          "height": 720
+        },
+        {
+          "id": "6c1f56d3cd9648ceb33a133d59e4a61f.webp",
+          "url": "/api/extractions/rc5-dump/assets/6c1f56d3cd9648ceb33a133d59e4a61f.webp",
+          "page": 26,
+          "bbox": [
+            0.09633,
+            0.05415,
+            0.87102,
+            0.33485
+          ],
+          "width": 1922,
+          "height": 985
+        }
+      ],
+      "question_numbers": [
+        191,
+        192,
+        193,
+        194,
+        195
+      ],
+      "page_numbers": [
+        25,
+        26
+      ],
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "id": "reading-196-200",
+      "kind": "image",
+      "title": "Questions 196-200 refer to the following article, memo, and policy.",
+      "assets": [
+        {
+          "id": "7d344dc38f024627932ce38a66a3a472.webp",
+          "url": "/api/extractions/rc5-dump/assets/7d344dc38f024627932ce38a66a3a472.webp",
+          "page": 27,
+          "bbox": [
+            0.13744,
+            0.09091,
+            0.86014,
+            0.65004
+          ],
+          "width": 1793,
+          "height": 1962
+        },
+        {
+          "id": "9faba428a05c4456b35b65226f84c786.webp",
+          "url": "/api/extractions/rc5-dump/assets/9faba428a05c4456b35b65226f84c786.webp",
+          "page": 28,
+          "bbox": [
+            0.12455,
+            0.05301,
+            0.84119,
+            0.28612
+          ],
+          "width": 1778,
+          "height": 818
+        }
+      ],
+      "question_numbers": [
+        196,
+        197,
+        198,
+        199,
+        200
+      ],
+      "page_numbers": [
+        27,
+        28
+      ],
+      "confidence": 100.0,
+      "issues": []
+    }
+  ],
+  "issues": [
+    {
+      "code": "question_recovered_from_options",
+      "message": "Đã khôi phục vị trí câu 109 từ nhóm phương án OCR.",
+      "page": 2,
+      "question_number": 109,
+      "severity": "warning"
+    }
+  ],
+  "metadata": {
+    "page_count": 28,
+    "duration_seconds": 85.02,
+    "text_mode": "ocr",
+    "text_layer_pages": [],
+    "skipped_pages": [],
+    "content_start_page": 1,
+    "detected_question_range": [
+      101,
+      200
+    ],
+    "repeated_watermarks_filtered": [],
+    "reading_roi": {
+      "enabled": false,
+      "locator_pages": 0,
+      "roi_pages": 0,
+      "roi_count": 0,
+      "fallback_pages": [],
+      "recovery_pages": [
+        8,
+        16,
+        18
+      ],
+      "recovery_count": 3,
+      "locator_seconds": 0.0,
+      "roi_seconds": 0.0,
+      "recovery_seconds": 4.049
+    }
+  }
+}

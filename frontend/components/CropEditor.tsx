@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Crop, X } from "lucide-react";
 
 import { useAuthenticatedMediaUrl } from "@/components/AuthenticatedMedia";
@@ -26,6 +26,7 @@ interface CropEditorProps {
   mode?: "edit" | "manual";
   pageCount?: number;
   availableQuestionNumbers?: number[];
+  localDraftKey?: string;
   onCancel: () => void;
   onSave: (selection: CropSelection) => Promise<void>;
 }
@@ -40,6 +41,7 @@ export default function CropEditor({
   mode = "edit",
   pageCount = 1,
   availableQuestionNumbers = [],
+  localDraftKey,
   onCancel,
   onSave,
 }: CropEditorProps) {
@@ -50,9 +52,40 @@ export default function CropEditor({
   const [saving, setSaving] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<DragState | null>(null);
-  const sourcePage = useAuthenticatedMediaUrl(
-    `/api/extractions/${jobId}/pages/${page}`,
+  const remoteSourcePage = useAuthenticatedMediaUrl(
+    localDraftKey ? "" : `/api/extractions/${jobId}/pages/${page}`,
   );
+  const [localSourcePage, setLocalSourcePage] = useState<{
+    url: string;
+    loading: boolean;
+    error: string | null;
+  }>({ url: "", loading: Boolean(localDraftKey), error: null });
+  useEffect(() => {
+    if (!localDraftKey) return;
+    let objectUrl = "";
+    let cancelled = false;
+    setLocalSourcePage({ url: "", loading: true, error: null });
+    void import("@/lib/client-ocr/crop")
+      .then(({ renderClientOcrPage }) => renderClientOcrPage(localDraftKey, page))
+      .then((blob) => {
+        if (cancelled) return;
+        objectUrl = URL.createObjectURL(blob);
+        setLocalSourcePage({ url: objectUrl, loading: false, error: null });
+      })
+      .catch((reason) => {
+        if (cancelled) return;
+        setLocalSourcePage({
+          url: "",
+          loading: false,
+          error: reason instanceof Error ? reason.message : "Không render được PDF local.",
+        });
+      });
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [localDraftKey, page]);
+  const sourcePage = localDraftKey ? localSourcePage : remoteSourcePage;
   const manual = mode === "manual";
 
   function startDrag(

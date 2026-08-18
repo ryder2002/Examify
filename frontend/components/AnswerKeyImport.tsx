@@ -11,7 +11,6 @@ import {
 
 import type { ExamType } from "@/lib/utils";
 import { parseAnswerKeyText } from "@/lib/utils";
-import { apiFetch } from "@/lib/api";
 
 type AnswerKeyImportProps = {
   jobId: string;
@@ -76,44 +75,21 @@ export default function AnswerKeyImport({
   }
 
   async function scanImage(file: File) {
-    if (!file.type.startsWith("image/")) {
-      setMessage("Vui lòng chọn hoặc dán một file ảnh.");
+    const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+    if (!file.type.startsWith("image/") && !isPdf) {
+      setMessage("Vui lòng chọn hoặc dán một file ảnh hoặc PDF.");
       return;
     }
     setScanning(true);
     setMessage("Đang đọc bảng đáp án…");
-    const formData = new FormData();
-    formData.append("file", file);
     const controller = new AbortController();
     const timeoutId = window.setTimeout(() => controller.abort(), 45000);
     try {
-      const response = await apiFetch(
-        `/api/extractions/${jobId}/answer-key-image`,
-        { method: "POST", body: formData, signal: controller.signal },
-      );
-      const responseText = await response.text();
-      let payload: ImageImportResponse = {
-        answer_key: {},
-        recognized_count: 0,
-        ignored: [],
-        missing: [],
-        raw_text: "",
-      };
-      try {
-        payload = responseText ? (JSON.parse(responseText) as ImageImportResponse) : payload;
-      } catch {
-        // Reverse proxies can return an HTML error page. Never expose a JSON
-        // parser error to the teacher instead of the actionable OCR message.
-      }
-      if (!response.ok) {
-        const fallback =
-          response.status === 404
-            ? "Bộ OCR của ứng dụng chưa hỗ trợ đọc ảnh đáp án hoặc bản nháp không còn tồn tại. Hãy cập nhật Examify Desktop và mở lại đề."
-            : response.status === 504
-              ? "Đọc ảnh đáp án mất quá nhiều thời gian. Hãy thử lại sau khi cập nhật Examify Desktop; ảnh 4 hoặc 5 cột sẽ được xử lý cục bộ."
-              : `Không đọc được ảnh đáp án (HTTP ${response.status}).`;
-        throw new Error(payload.detail || fallback);
-      }
+      const { recognizeAnswerKeyImage, recognizeAnswerKeyPdf } = await import("@/lib/client-ocr");
+      if (controller.signal.aborted) throw new DOMException("OCR đã bị hủy.", "AbortError");
+      const payload = (await (isPdf
+        ? recognizeAnswerKeyPdf(file, examType)
+        : recognizeAnswerKeyImage(file, examType))) as ImageImportResponse;
       const answers = Object.fromEntries(
         Object.entries(payload.answer_key).map(([number, letter]) => [
           Number(number),
@@ -129,7 +105,7 @@ export default function AnswerKeyImport({
         onChange(formattedText);
       }
       if (Object.keys(answers).length) {
-        onApply(answers, "image");
+        onApply(answers, isPdf ? "local-pdf" : "local-image");
       }
       const detailWarning = payload.detail || null;
       const timeoutWarning = (payload.ignored || []).find((item) =>
@@ -187,7 +163,7 @@ export default function AnswerKeyImport({
           </h2>
           <p className="mt-0.5 text-xs leading-5 text-slate-500">
             Dán text dạng <strong>1(D) 2(A)</strong>, chọn ảnh hoặc nhấn Ctrl+V
-            để đọc ảnh đáp án.
+            để đọc ảnh đáp án; PDF scan cũng được nhận dạng trực tiếp trên máy.
           </p>
         </div>
       </div>
@@ -238,7 +214,7 @@ export default function AnswerKeyImport({
         <input
           ref={inputRef}
           type="file"
-          accept="image/png,image/jpeg,image/webp,image/bmp,image/tiff"
+          accept="image/png,image/jpeg,image/webp,image/bmp,image/tiff,application/pdf"
           className="hidden"
           onChange={(event) => {
             const image = event.target.files?.[0];

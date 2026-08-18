@@ -1,8 +1,10 @@
 # Smart Exam Converter
 
-Ứng dụng local chuyển PDF TOEIC dạng scan thành bài thi trên trình duyệt. Pipeline
-nhận biết riêng Listening/Reading, OCR câu hỏi theo cột và giữ passage, ảnh, bảng,
-sơ đồ dưới dạng crop gốc.
+Ứng dụng chuyển PDF TOEIC dạng scan thành bài thi trên trình duyệt. Luồng tạo đề
+web upload PDF/audio lên FastAPI, Celery worker chạy Tesseract `eng` + Poppler
+trên server, rồi trình duyệt poll tiến độ và mở màn review. OCR không chạy bằng
+Tesseract.js trong Chrome ở luồng tạo đề mới; draft client cũ vẫn được giữ để
+tương thích dữ liệu đã tạo.
 
 ## Khả năng chính
 
@@ -16,12 +18,13 @@ sơ đồ dưới dạng crop gốc.
   - Part 5: Tesseract nhận diện toàn trang một lần rồi phân lại theo hai cột.
   - Part 6–7: giữ flyer, e-mail, message, article và advertisement dưới dạng ảnh.
   - Đoạn đôi/ba được gom theo range `Questions x-y`, hỗ trợ nhiều ảnh qua nhiều trang.
-- Job OCR bất đồng bộ với tiến độ theo trang.
+- Job OCR server có trạng thái bền vững trong PostgreSQL/MinIO, có thể tiếp tục
+  poll sau refresh; cache được phân biệt bằng phiên bản pipeline.
 - Màn review để sửa text, đáp án, liên kết stimulus và vùng crop.
 - Part 3 và Part 4 hiển thị/điều hướng theo nhóm ba câu: 32–34, 35–37, v.v.
 - Có thể lưu Listening ở màn review, tiếp tục tạo Reading rồi ghép thành một đề.
 - Mỗi draft Listening/Reading có khu vực answer key riêng: bấm trực tiếp,
-  paste text dạng `1(D) 2(A)`/`101(B)`, upload ảnh hoặc Ctrl+V ảnh để OCR local.
+  paste text dạng `1(D) 2(A)`/`101(B)`, upload ảnh/PDF hoặc Ctrl+V ảnh để OCR local.
 - Giao diện production navy–trắng, không dùng gradient; card và nút có stroke,
   shadow và trạng thái tương tác rõ ràng.
 - Chọn số câu theo nhóm, không tách câu khỏi passage/graphic.
@@ -30,13 +33,16 @@ sơ đồ dưới dạng crop gốc.
 - Submit hoặc hết giờ chuyển tới trang Result riêng, hiển thị câu đúng, sai,
   chưa làm và chi tiết đáp án.
 - Đề đã finalize được lưu trong **My Exams** để làm lại nhiều lần.
-- Trang Admin sinh mã kích hoạt dùng một lần, quản lý thiết bị và theo dõi OCR.
+- Trang Admin sinh mã kích hoạt dùng một lần và quản lý thiết bị; server theo dõi
+  tiến độ OCR có giới hạn và không ghi binary lớn vào PostgreSQL.
 
 ## Công nghệ
 
 - Frontend: Next.js 16, React 19, TailwindCSS.
-- Backend: FastAPI stateless, Celery/Redis, PostgreSQL và MinIO.
-- OCR worker: pdfplumber, Poppler/pdf2image, Tesseract/pytesseract, Pillow và OpenCV.
+- Backend: FastAPI, Celery/Redis, Tesseract `eng` + Poppler/OpenCV headless,
+  PostgreSQL và MinIO.
+- Frontend: Next.js 16/React 19; chỉ giữ Tesseract.js/PDF.js/OpenCV.js để đọc
+  draft client cũ và các luồng compatibility, không dùng cho upload tạo đề mới.
 - Triển khai: Docker Compose và Nginx.
 
 ## Chạy production bằng Docker Compose
@@ -50,11 +56,11 @@ docker compose ps
 
 Mở `http://localhost/admin` và đăng nhập bằng
 `ADMIN_EMAIL`/`ADMIN_PASSWORD`. `/activate` chỉ dành cho người dùng nhập mã.
-Mặc định chỉ chạy một OCR worker để bảo vệ RAM/CPU. Chỉ tăng worker sau khi đã
-tính lại ngân sách tài nguyên và chạy load test trên cấu hình server đích:
+OCR server chạy trong Compose bằng một worker bounded; media và OCR dùng queue
+riêng nhưng cùng ceiling tài nguyên:
 
 ```bash
-docker compose up -d --scale worker=4
+docker compose up -d --scale worker=1
 ```
 
 Chi tiết backup, TLS và vận hành xem
@@ -62,15 +68,15 @@ Chi tiết backup, TLS và vận hành xem
 
 ## Cài đặt
 
-Yêu cầu Python 3.10+, Node.js 18+ và Poppler:
+Yêu cầu Python 3.10+ và Node.js 18+. Runtime backend cần Poppler, Tesseract
+và language pack `eng`; Docker image đã cài sẵn các gói này:
 
 ```bash
-sudo apt install poppler-utils
-
 cd backend
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+# Máy chạy local cần Poppler, Tesseract và language pack eng.
 
 cd ../frontend
 npm install
@@ -95,39 +101,33 @@ cả hai extraction job.
 
 ## API v2
 
-### `POST /api/extractions`
+### API OCR server
 
-Multipart fields:
+`POST /api/extractions` nhận PDF/audio, tạo job idempotent và đưa vào queue
+`ocr`. `GET /api/extractions/{job_id}` trả progress/questions/stimuli; asset và
+audio dùng URL protected/presigned của job. `POST /api/extractions/{job_id}/finalize`
+hoàn tất draft sau review.
 
-- `file`: PDF, tối đa 30 MiB.
-- `exam_type`: `listening` hoặc `reading`.
-- `audio_full` hoặc `audio_part_1`…`audio_part_4`: tùy chọn cho Listening;
-  mỗi file tối đa 30 MiB. Trường `audio` cũ vẫn được hỗ trợ như Audio Full.
+Các session `/api/v1/client-extractions` và draft `clientDraft` chỉ còn là
+compatibility cho dữ liệu cũ, không phải luồng tạo mới.
 
-Trả `202`:
+Luồng mới upload multipart tới `/api/extractions`; worker materialize source từ
+MinIO, render 300 DPI và chạy Tesseract bounded. Không đưa OCR text/image ra
+nhà cung cấp bên ngoài.
 
-```json
-{
-  "job_id": "uuid",
-  "status": "queued",
-  "cached": false
-}
-```
+- `POST /api/v1/client-extractions/{id}/uploads/refresh`: cấp lại policy chưa upload.
+- `POST /api/v1/client-extractions/{id}/commit`: validate `ClientExtractionManifestV1`
+  và persist exam/version trong một transaction, không I/O MinIO trong transaction.
+- `GET/DELETE /api/v1/client-extractions/{id}`: trạng thái media hoặc hủy session.
+- `POST /api/v1/solution-imports/validate`: validate rows solution đã OCR local.
 
-### Các endpoint tiếp theo
+Manifest giới hạn 200 câu, 200 stimulus, 300 asset và 5 MiB; câu/phương án còn
+issue không được finalize.
 
-- `GET /api/extractions/{job_id}`: tiến độ và `ExamDraft`.
-- `GET /api/extractions/{job_id}/assets/{asset_id}`: crop WebP.
-- `GET /api/extractions/{job_id}/audio/{audio_id}`: stream audio Listening,
-  hỗ trợ byte-range của trình duyệt.
-- `GET /api/extractions/{job_id}/pages/{page}`: trang nguồn dùng trong crop editor.
-- `POST /api/extractions/{job_id}/answer-key-image`: OCR ảnh answer key local.
-- `PATCH /api/extractions/{job_id}/draft`: lưu questions/stimuli đã review.
-- `POST /api/extractions/{job_id}/finalize`: answer key, count và shuffle.
-
-Upload/OCR/review có thể thực hiện trước khi kích hoạt. Endpoint `finalize` yêu
-cầu phiên thiết bị hợp lệ; frontend sẽ chuyển sang `/activate` và quay lại đúng
-job sau khi kích hoạt.
+OCR tạo đề mới chạy trên server qua job bền vững. Browser upload PDF/audio một
+lần rồi poll trạng thái; chỉ mở review khi worker hoàn tất. Các draft client cũ
+vẫn có thể đọc/commit qua API compatibility, nhưng không còn là đường OCR mặc
+định cho upload mới.
 
 ### API quản trị và sở hữu dữ liệu
 
@@ -157,8 +157,12 @@ Part 1/2 vẫn render được lựa chọn khi PDF không in nội dung đáp �
   filesystem mode để phát triển và chạy golden test cũ.
 - Trong Docker, PostgreSQL và MinIO là nguồn dữ liệu chính; thư mục worker chỉ
   là cache tạm có thể xóa.
-- OCR được xếp hàng bằng Redis/Celery; mỗi container worker chạy concurrency 1
-  và có thể scale theo số core/RAM.
+- OCR tạo đề chạy bằng Tesseract trên server worker; `OCR_PAGE_WORKERS` và
+  `OCR_ENGINE_POOL_SIZE` được giới hạn để không oversubscribe CPU/RAM. PDF/DOCX
+  lời giải có text vẫn parse deterministic; luồng answer-key client cũ không
+  ảnh hưởng upload tạo đề mới.
+- Redis/Celery lưu trạng thái job bounded; API không tạo một OCR thread cho mỗi
+  request.
 
 ## Kiểm thử
 

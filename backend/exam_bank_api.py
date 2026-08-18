@@ -97,7 +97,7 @@ def _shared_exam(
         Exam.id == exam_id,
         Exam.library_scope == "teacher_shared",
         Exam.deleted_at.is_(None),
-        *exam_bank_visibility_filters(identity),
+        *exam_bank_visibility_filters(identity, Exam),
     )
     if lock:
         statement = statement.with_for_update()
@@ -236,32 +236,11 @@ def _clone_job(
                 copied_by_folder[folder] += 1
 
             if copied_by_folder["pages"] == 0:
-                from pdf2image import convert_from_path, pdfinfo_from_path
-
-                page_count = int(pdfinfo_from_path(str(job_dir / "input.pdf"))["Pages"])
-                if page_count < 1 or page_count > settings.max_pdf_pages:
-                    raise RuntimeError("Source PDF có số trang không hợp lệ")
-                render_dir = job_dir / "rendered-pages"
-                render_dir.mkdir(parents=True, exist_ok=True)
-                rendered = convert_from_path(
-                    str(job_dir / "input.pdf"),
-                    dpi=140,
-                    fmt="jpeg",
-                    output_folder=str(render_dir),
-                    paths_only=True,
-                    thread_count=2,
-                )
-                for page_number, rendered_path in enumerate(rendered, start=1):
-                    filename = f"page-{page_number:03d}.jpg"
-                    destination = job_dir / "pages" / filename
-                    shutil.move(str(rendered_path), destination)
-                    storage.put_file(
-                        settings.minio_bucket_assets,
-                        f"jobs/{job_id}/pages/{filename}",
-                        destination,
-                        "image/jpeg",
-                    )
-                shutil.rmtree(render_dir, ignore_errors=True)
+                # Server-side page rendering was intentionally removed with
+                # the web OCR pipeline. Existing-exam edit migration must
+                # return a signed source URL and let PDF.js render/crop in the
+                # browser; do not silently recreate JPEG pages here.
+                raise RuntimeError("Browser PDF.js edit flow is required for this source")
         else:
             source_dir = job_store.job_dir(source_job_id)
             source_pdf = source_dir / "input.pdf"
@@ -567,7 +546,7 @@ def list_exam_bank(
         filters: list[Any] = [
             Exam.library_scope == "teacher_shared",
             Exam.deleted_at.is_(None),
-            *exam_bank_visibility_filters(identity),
+            *exam_bank_visibility_filters(identity, Exam),
         ]
         if not include_archived or identity["role"] == "student":
             filters.append(Exam.archived_at.is_(None))
@@ -676,7 +655,7 @@ def list_exam_bank_tags(request: Request) -> dict[str, Any]:
                     Exam.library_scope == "teacher_shared",
                     Exam.deleted_at.is_(None),
                     Exam.archived_at.is_(None),
-                    *exam_bank_visibility_filters(identity),
+                    *exam_bank_visibility_filters(identity, Exam),
                 )
             )
         )
@@ -1260,7 +1239,7 @@ async def create_solution_import(
     from solution_tasks import process_solution_import
 
     if settings.use_celery:
-        process_solution_import.apply_async(args=[import_id], queue="ocr")
+        process_solution_import.apply_async(args=[import_id], queue="documents")
     else:
         try:
             process_solution_import.run(import_id)

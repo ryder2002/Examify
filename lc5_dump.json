@@ -1,0 +1,2500 @@
+{
+  "questions": [
+    {
+      "number": 1,
+      "part": "Part 1 - Phần 1",
+      "text": "",
+      "options": {
+        "A": "",
+        "B": "",
+        "C": "",
+        "D": ""
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-photo-1",
+      "stimulus_id": "listening-photo-1",
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "number": 2,
+      "part": "Part 1 - Phần 1",
+      "text": "",
+      "options": {
+        "A": "",
+        "B": "",
+        "C": "",
+        "D": ""
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-photo-2",
+      "stimulus_id": "listening-photo-2",
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "number": 3,
+      "part": "Part 1 - Phần 1",
+      "text": "",
+      "options": {
+        "A": "",
+        "B": "",
+        "C": "",
+        "D": ""
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-photo-3",
+      "stimulus_id": "listening-photo-3",
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "number": 4,
+      "part": "Part 1 - Phần 1",
+      "text": "",
+      "options": {
+        "A": "",
+        "B": "",
+        "C": "",
+        "D": ""
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-photo-4",
+      "stimulus_id": "listening-photo-4",
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "number": 5,
+      "part": "Part 1 - Phần 1",
+      "text": "",
+      "options": {
+        "A": "",
+        "B": "",
+        "C": "",
+        "D": ""
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-photo-5",
+      "stimulus_id": "listening-photo-5",
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "number": 6,
+      "part": "Part 1 - Phần 1",
+      "text": "",
+      "options": {
+        "A": "",
+        "B": "",
+        "C": "",
+        "D": ""
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-photo-6",
+      "stimulus_id": "listening-photo-6",
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "number": 7,
+      "part": "Part 2 - Phần 2",
+      "text": "",
+      "options": {
+        "A": "",
+        "B": "",
+        "C": ""
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C"
+      ],
+      "correct": null,
+      "group_id": "q-7",
+      "stimulus_id": null,
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "number": 8,
+      "part": "Part 2 - Phần 2",
+      "text": "",
+      "options": {
+        "A": "",
+        "B": "",
+        "C": ""
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C"
+      ],
+      "correct": null,
+      "group_id": "q-8",
+      "stimulus_id": null,
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "number": 9,
+      "part": "Part 2 - Phần 2",
+      "text": "",
+      "options": {
+        "A": "",
+        "B": "",
+        "C": ""
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C"
+      ],
+      "correct": null,
+      "group_id": "q-9",
+      "stimulus_id": null,
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "number": 10,
+      "part": "Part 2 - Phần 2",
+      "text": "",
+      "options": {
+        "A": "",
+        "B": "",
+        "C": ""
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C"
+      ],
+      "correct": null,
+      "group_id": "q-10",
+      "stimulus_id": null,
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "number": 11,
+      "part": "Part 2 - Phần 2",
+      "text": "",
+      "options": {
+        "A": "",
+        "B": "",
+        "C": ""
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C"
+      ],
+      "correct": null,
+      "group_id": "q-11",
+      "stimulus_id": null,
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "number": 12,
+      "part": "Part 2 - Phần 2",
+      "text": "",
+      "options": {
+        "A": "",
+        "B": "",
+        "C": ""
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C"
+      ],
+      "correct": null,
+      "group_id": "q-12",
+      "stimulus_id": null,
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "number": 13,
+      "part": "Part 2 - Phần 2",
+      "text": "",
+      "options": {
+        "A": "",
+        "B": "",
+        "C": ""
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C"
+      ],
+      "correct": null,
+      "group_id": "q-13",
+      "stimulus_id": null,
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "number": 14,
+      "part": "Part 2 - Phần 2",
+      "text": "",
+      "options": {
+        "A": "",
+        "B": "",
+        "C": ""
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C"
+      ],
+      "correct": null,
+      "group_id": "q-14",
+      "stimulus_id": null,
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "number": 15,
+      "part": "Part 2 - Phần 2",
+      "text": "",
+      "options": {
+        "A": "",
+        "B": "",
+        "C": ""
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C"
+      ],
+      "correct": null,
+      "group_id": "q-15",
+      "stimulus_id": null,
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "number": 16,
+      "part": "Part 2 - Phần 2",
+      "text": "",
+      "options": {
+        "A": "",
+        "B": "",
+        "C": ""
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C"
+      ],
+      "correct": null,
+      "group_id": "q-16",
+      "stimulus_id": null,
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "number": 17,
+      "part": "Part 2 - Phần 2",
+      "text": "",
+      "options": {
+        "A": "",
+        "B": "",
+        "C": ""
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C"
+      ],
+      "correct": null,
+      "group_id": "q-17",
+      "stimulus_id": null,
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "number": 18,
+      "part": "Part 2 - Phần 2",
+      "text": "",
+      "options": {
+        "A": "",
+        "B": "",
+        "C": ""
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C"
+      ],
+      "correct": null,
+      "group_id": "q-18",
+      "stimulus_id": null,
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "number": 19,
+      "part": "Part 2 - Phần 2",
+      "text": "",
+      "options": {
+        "A": "",
+        "B": "",
+        "C": ""
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C"
+      ],
+      "correct": null,
+      "group_id": "q-19",
+      "stimulus_id": null,
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "number": 20,
+      "part": "Part 2 - Phần 2",
+      "text": "",
+      "options": {
+        "A": "",
+        "B": "",
+        "C": ""
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C"
+      ],
+      "correct": null,
+      "group_id": "q-20",
+      "stimulus_id": null,
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "number": 21,
+      "part": "Part 2 - Phần 2",
+      "text": "",
+      "options": {
+        "A": "",
+        "B": "",
+        "C": ""
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C"
+      ],
+      "correct": null,
+      "group_id": "q-21",
+      "stimulus_id": null,
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "number": 22,
+      "part": "Part 2 - Phần 2",
+      "text": "",
+      "options": {
+        "A": "",
+        "B": "",
+        "C": ""
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C"
+      ],
+      "correct": null,
+      "group_id": "q-22",
+      "stimulus_id": null,
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "number": 23,
+      "part": "Part 2 - Phần 2",
+      "text": "",
+      "options": {
+        "A": "",
+        "B": "",
+        "C": ""
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C"
+      ],
+      "correct": null,
+      "group_id": "q-23",
+      "stimulus_id": null,
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "number": 24,
+      "part": "Part 2 - Phần 2",
+      "text": "",
+      "options": {
+        "A": "",
+        "B": "",
+        "C": ""
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C"
+      ],
+      "correct": null,
+      "group_id": "q-24",
+      "stimulus_id": null,
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "number": 25,
+      "part": "Part 2 - Phần 2",
+      "text": "",
+      "options": {
+        "A": "",
+        "B": "",
+        "C": ""
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C"
+      ],
+      "correct": null,
+      "group_id": "q-25",
+      "stimulus_id": null,
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "number": 26,
+      "part": "Part 2 - Phần 2",
+      "text": "",
+      "options": {
+        "A": "",
+        "B": "",
+        "C": ""
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C"
+      ],
+      "correct": null,
+      "group_id": "q-26",
+      "stimulus_id": null,
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "number": 27,
+      "part": "Part 2 - Phần 2",
+      "text": "",
+      "options": {
+        "A": "",
+        "B": "",
+        "C": ""
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C"
+      ],
+      "correct": null,
+      "group_id": "q-27",
+      "stimulus_id": null,
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "number": 28,
+      "part": "Part 2 - Phần 2",
+      "text": "",
+      "options": {
+        "A": "",
+        "B": "",
+        "C": ""
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C"
+      ],
+      "correct": null,
+      "group_id": "q-28",
+      "stimulus_id": null,
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "number": 29,
+      "part": "Part 2 - Phần 2",
+      "text": "",
+      "options": {
+        "A": "",
+        "B": "",
+        "C": ""
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C"
+      ],
+      "correct": null,
+      "group_id": "q-29",
+      "stimulus_id": null,
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "number": 30,
+      "part": "Part 2 - Phần 2",
+      "text": "",
+      "options": {
+        "A": "",
+        "B": "",
+        "C": ""
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C"
+      ],
+      "correct": null,
+      "group_id": "q-30",
+      "stimulus_id": null,
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "number": 31,
+      "part": "Part 2 - Phần 2",
+      "text": "",
+      "options": {
+        "A": "",
+        "B": "",
+        "C": ""
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C"
+      ],
+      "correct": null,
+      "group_id": "q-31",
+      "stimulus_id": null,
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "number": 32,
+      "part": "Part 3 - Phần 3",
+      "text": "What problem does the woman describe?",
+      "options": {
+        "A": "A room is not available.",
+        "B": "A window will not open.",
+        "C": "A projector is not working.",
+        "D": "The weather has changed suddenly."
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-32-34",
+      "stimulus_id": null,
+      "confidence": 94.3,
+      "issues": []
+    },
+    {
+      "number": 33,
+      "part": "Part 3 - Phần 3",
+      "text": "What does the man suggest doing?",
+      "options": {
+        "A": "Moving to a different room",
+        "B": "Calling a technician",
+        "C": "Canceling an event",
+        "D": "Ordering some supplies"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-32-34",
+      "stimulus_id": null,
+      "confidence": 94.3,
+      "issues": []
+    },
+    {
+      "number": 34,
+      "part": "Part 3 - Phần 3",
+      "text": "What does the man hand to the woman?",
+      "options": {
+        "A": "An umbrella",
+        "B": "Some keys",
+        "C": "A cable",
+        "D": "Some printouts"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-32-34",
+      "stimulus_id": null,
+      "confidence": 94.3,
+      "issues": []
+    },
+    {
+      "number": 35,
+      "part": "Part 3 - Phần 3",
+      "text": "What industry does A manda Hoffman work in?",
+      "options": {
+        "A": "Hospitality",
+        "B": "Healthcare",
+        "C": "Publishing",
+        "D": "Information technology"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-35-37",
+      "stimulus_id": null,
+      "confidence": 94.3,
+      "issues": []
+    },
+    {
+      "number": 36,
+      "part": "Part 3 - Phần 3",
+      "text": "A ccording to the man, what is included in the registration packet?",
+      "options": {
+        "A": "A map",
+        "B": "A gift card",
+        "C": "A schedule of events",
+        "D": "A certificate of attendance"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-35-37",
+      "stimulus_id": null,
+      "confidence": 94.3,
+      "issues": []
+    },
+    {
+      "number": 37,
+      "part": "Part 3 - Phần 3",
+      "text": "What does the man tell the woman to do?",
+      "options": {
+        "A": "A rrive early",
+        "B": "Pay a fee",
+        "C": "Wear a name badge",
+        "D": "Choose a menu option"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-35-37",
+      "stimulus_id": null,
+      "confidence": 94.3,
+      "issues": []
+    },
+    {
+      "number": 38,
+      "part": "Part 3 - Phần 3",
+      "text": "What event will the woman attend this weekend?",
+      "options": {
+        "A": "A wedding",
+        "B": "A birthday party",
+        "C": "A retirement dinner",
+        "D": "A graduation celebration"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-38-40",
+      "stimulus_id": null,
+      "confidence": 94.3,
+      "issues": []
+    },
+    {
+      "number": 39,
+      "part": "Part 3 - Phần 3",
+      "text": "What does the man offer to do?",
+      "options": {
+        "A": "A uthorize free shipping",
+        "B": "A pply a discount",
+        "C": "Provide a sample",
+        "D": "Make a recommendation"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-38-40",
+      "stimulus_id": null,
+      "confidence": 94.3,
+      "issues": []
+    },
+    {
+      "number": 40,
+      "part": "Part 3 - Phần 3",
+      "text": "What does the woman ask about?",
+      "options": {
+        "A": "An expiration date",
+        "B": "A manufacturer’s guarantee",
+        "C": "The origin of a product",
+        "D": "The cost of a product"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-38-40",
+      "stimulus_id": null,
+      "confidence": 94.3,
+      "issues": []
+    },
+    {
+      "number": 41,
+      "part": "Part 3 - Phần 3",
+      "text": "Why is the woman visiting?",
+      "options": {
+        "A": "To promote a product",
+        "B": "To sign a contract",
+        "C": "To tour a facility",
+        "D": "To inspect some equipment"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-41-43",
+      "stimulus_id": null,
+      "confidence": 94.3,
+      "issues": []
+    },
+    {
+      "number": 42,
+      "part": "Part 3 - Phần 3",
+      "text": "What did the woman’s company design?",
+      "options": {
+        "A": "A digital security system",
+        "B": "A device to lift heavy objects",
+        "C": "An application to monitor machines",
+        "D": "Protective clothing for workers"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-41-43",
+      "stimulus_id": null,
+      "confidence": 94.3,
+      "issues": []
+    },
+    {
+      "number": 43,
+      "part": "Part 3 - Phần 3",
+      "text": "What does the woman say her company can provide?",
+      "options": {
+        "A": "A new client discount",
+        "B": "A training video",
+        "C": "An extended warranty",
+        "D": "Customer testimonials TEST5 81"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-41-43",
+      "stimulus_id": null,
+      "confidence": 94.3,
+      "issues": []
+    },
+    {
+      "number": 44,
+      "part": "Part 3 - Phần 3",
+      "text": "Who most likely is the man?",
+      "options": {
+        "A": "A theater employee",
+        "B": "A taxi driver",
+        "C": "A train conductor",
+        "D": "A construction worker"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-44-46",
+      "stimulus_id": null,
+      "confidence": 94.2,
+      "issues": []
+    },
+    {
+      "number": 45,
+      "part": "Part 3 - Phần 3",
+      "text": "What is causing a problem?",
+      "options": {
+        "A": "A truck is too heavy.",
+        "B": "An event has been delayed.",
+        "C": "A parking area is full.",
+        "D": "A road is closed."
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-44-46",
+      "stimulus_id": null,
+      "confidence": 94.2,
+      "issues": []
+    },
+    {
+      "number": 46,
+      "part": "Part 3 - Phần 3",
+      "text": "What does the man say he will do?",
+      "options": {
+        "A": "A sk for a refund",
+        "B": "Take a different route",
+        "C": "Postpone a trip",
+        "D": "File a complaint"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-44-46",
+      "stimulus_id": null,
+      "confidence": 94.2,
+      "issues": []
+    },
+    {
+      "number": 47,
+      "part": "Part 3 - Phần 3",
+      "text": "Why does the woman say, “Last year we sent only two representatives”?",
+      "options": {
+        "A": "To explain a delay",
+        "B": "To compliment a team",
+        "C": "To point out that an event was unsuccessful",
+        "D": "To question a decision"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-47-49",
+      "stimulus_id": null,
+      "confidence": 94.2,
+      "issues": []
+    },
+    {
+      "number": 48,
+      "part": "Part 3 - Phần 3",
+      "text": "A ccording to the man, what do some clients want to do?",
+      "options": {
+        "A": "Increase their online offerings",
+        "B": "Obtain additional financing",
+        "C": "Open a new office",
+        "D": "Recruit more employees"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-47-49",
+      "stimulus_id": null,
+      "confidence": 94.2,
+      "issues": []
+    },
+    {
+      "number": 49,
+      "part": "Part 3 - Phần 3",
+      "text": "A ccording to the man, what is the Renova Hotel offering this month?",
+      "options": {
+        "A": "A new shuttle service",
+        "B": "A discount for businesses",
+        "C": "A flexible cancellation policy",
+        "D": "Complimentary meals"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-47-49",
+      "stimulus_id": null,
+      "confidence": 94.2,
+      "issues": []
+    },
+    {
+      "number": 50,
+      "part": "Part 3 - Phần 3",
+      "text": "What problem does the woman mention?",
+      "options": {
+        "A": "in ticket sales",
+        "B": "A lack of exhibition space",
+        "C": "A colleague’s resignation",
+        "D": "painting"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-50-52",
+      "stimulus_id": null,
+      "confidence": 94.2,
+      "issues": []
+    },
+    {
+      "number": 51,
+      "part": "Part 3 - Phần 3",
+      "text": "What does the man suggest doing?",
+      "options": {
+        "A": "Relocating an exhibit",
+        "B": "Consulting a specialist",
+        "C": "A dding security measures",
+        "D": "Introducing a new activity"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-50-52",
+      "stimulus_id": null,
+      "confidence": 94.2,
+      "issues": []
+    },
+    {
+      "number": 52,
+      "part": "Part 3 - Phần 3",
+      "text": "What will the man most likely do next?",
+      "options": {
+        "A": "Write a press release",
+        "B": "A ttend a budget meeting",
+        "C": "Make a list of supplies",
+        "D": "Plan a site visit"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-50-52",
+      "stimulus_id": null,
+      "confidence": 94.2,
+      "issues": []
+    },
+    {
+      "number": 53,
+      "part": "Part 3 - Phần 3",
+      "text": "Where most likely are the speakers?",
+      "options": {
+        "A": "At a clothing factory",
+        "B": "At a bookstore",
+        "C": "At a tailor’s shop",
+        "D": "At a furniture store"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-53-55",
+      "stimulus_id": null,
+      "confidence": 94.2,
+      "issues": []
+    },
+    {
+      "number": 54,
+      "part": "Part 3 - Phần 3",
+      "text": "A ccording to the man, why will a product cost more?",
+      "options": {
+        "A": "It includes an extended warranty.",
+        "B": "It is a custom order.",
+        "C": "A rebate has expired.",
+        "D": "Shipping will be expedited."
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-53-55",
+      "stimulus_id": null,
+      "confidence": 94.2,
+      "issues": []
+    },
+    {
+      "number": 55,
+      "part": "Part 3 - Phần 3",
+      "text": "What does the man request?",
+      "options": {
+        "A": "A purchase receipt",
+        "B": "A delivery address",
+        "C": "A form of identification",
+        "D": "An account number"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-53-55",
+      "stimulus_id": null,
+      "confidence": 94.2,
+      "issues": []
+    },
+    {
+      "number": 56,
+      "part": "Part 3 - Phần 3",
+      "text": "Where most likely are the speakers?",
+      "options": {
+        "A": "At a hotel",
+        "B": "At a factory",
+        "C": "At a retail store",
+        "D": "At a trade show"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-56-58",
+      "stimulus_id": null,
+      "confidence": 93.6,
+      "issues": []
+    },
+    {
+      "number": 57,
+      "part": "Part 3 - Phần 3",
+      "text": "What feature does the man emphasize about some chairs?",
+      "options": {
+        "A": "The color",
+        "B": "The price",
+        "C": "The shape",
+        "D": "The durability"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-56-58",
+      "stimulus_id": null,
+      "confidence": 93.6,
+      "issues": []
+    },
+    {
+      "number": 58,
+      "part": "Part 3 - Phần 3",
+      "text": "What does the man say he will do later?",
+      "options": {
+        "A": "Modify a design",
+        "B": "E-mail a contract",
+        "C": "Create an invoice",
+        "D": "Send a photo"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-56-58",
+      "stimulus_id": null,
+      "confidence": 93.6,
+      "issues": []
+    },
+    {
+      "number": 59,
+      "part": "Part 3 - Phần 3",
+      "text": "What will happen next month?",
+      "options": {
+        "A": "An award will be given.",
+        "B": "A new product will launch.",
+        "C": "A colleague will retire.",
+        "D": "An office will relocate."
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-59-61",
+      "stimulus_id": null,
+      "confidence": 93.6,
+      "issues": []
+    },
+    {
+      "number": 60,
+      "part": "Part 3 - Phần 3",
+      "text": "What department do the speakers work in?",
+      "options": {
+        "A": "Sales",
+        "B": "Human Resources",
+        "C": "Legal",
+        "D": "A ccounting"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-59-61",
+      "stimulus_id": null,
+      "confidence": 93.6,
+      "issues": []
+    },
+    {
+      "number": 61,
+      "part": "Part 3 - Phần 3",
+      "text": "What does the man imply when he says, “we need someone with experience”?",
+      "options": {
+        "A": "The team has grown very quickly.",
+        "B": "The woman should apply for a job.",
+        "C": "A job description should be revised.",
+        "D": "A new manager is not experienced enough."
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-59-61",
+      "stimulus_id": null,
+      "confidence": 93.6,
+      "issues": []
+    },
+    {
+      "number": 62,
+      "part": "Part 3 - Phần 3",
+      "text": "Why are the speakers in New York?",
+      "options": {
+        "A": "They saw a play.",
+        "B": "They attended a conference.",
+        "C": "They met with some clients.",
+        "D": "They viewed some real estate."
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-62-64",
+      "stimulus_id": "listening-62-64",
+      "confidence": 93.6,
+      "issues": []
+    },
+    {
+      "number": 63,
+      "part": "Part 3 - Phần 3",
+      "text": "What does the woman ask the man about?",
+      "options": {
+        "A": "Locating some information",
+        "B": "A pplying for a position",
+        "C": "Opening a branch office",
+        "D": "Making a reservation"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-62-64",
+      "stimulus_id": "listening-62-64",
+      "confidence": 93.6,
+      "issues": []
+    },
+    {
+      "number": 64,
+      "part": "Part 3 - Phần 3",
+      "text": "Look at the graphic. Where will the man travel to next?",
+      "options": {
+        "A": "Shady Grove",
+        "B": "Braddock Bay",
+        "C": "Largo",
+        "D": "A shburn TEST5 83"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-62-64",
+      "stimulus_id": "listening-62-64",
+      "confidence": 93.6,
+      "issues": []
+    },
+    {
+      "number": 65,
+      "part": "Part 3 - Phần 3",
+      "text": "What does the woman ask the man about?",
+      "options": {
+        "A": "Whether a coupon is valid",
+        "B": "Whether a food is spicy",
+        "C": "Whether a drink is included",
+        "D": "Whether any seats are available"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-65-67",
+      "stimulus_id": "listening-65-67",
+      "confidence": 89.5,
+      "issues": []
+    },
+    {
+      "number": 66,
+      "part": "Part 3 - Phần 3",
+      "text": "Look at the graphic. Which special does the woman order?",
+      "options": {
+        "A": "Special 1",
+        "B": "Special 2",
+        "C": "Special 3",
+        "D": "Special 4"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-65-67",
+      "stimulus_id": "listening-65-67",
+      "confidence": 89.5,
+      "issues": []
+    },
+    {
+      "number": 67,
+      "part": "Part 3 - Phần 3",
+      "text": "What will the woman most likely do next?",
+      "options": {
+        "A": "Move her car",
+        "B": "Go to a patio",
+        "C": "Make a reservation",
+        "D": "Meet some friends"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-65-67",
+      "stimulus_id": "listening-65-67",
+      "confidence": 89.5,
+      "issues": []
+    },
+    {
+      "number": 68,
+      "part": "Part 3 - Phần 3",
+      "text": "What is the woman happy about?",
+      "options": {
+        "A": "She happened to meet some friends.",
+        "B": "The weather is perfect for an activity.",
+        "C": "The park was closer than expected.",
+        "D": "There are few people in the park."
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-68-70",
+      "stimulus_id": "listening-68-70",
+      "confidence": 89.5,
+      "issues": []
+    },
+    {
+      "number": 69,
+      "part": "Part 3 - Phần 3",
+      "text": "Look at the graphic. How far will the speakers hike?",
+      "options": {
+        "A": "7 kilometers",
+        "B": "5 kilometers",
+        "C": "2 kilometers",
+        "D": "1 kilometer"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-68-70",
+      "stimulus_id": "listening-68-70",
+      "confidence": 89.5,
+      "issues": []
+    },
+    {
+      "number": 70,
+      "part": "Part 3 - Phần 3",
+      "text": "What can the speakers do while waiting for the shuttle?",
+      "options": {
+        "A": "Buy some snacks",
+        "B": "Watch a video",
+        "C": "Visit a gift shop",
+        "D": "Rent some equipment"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-68-70",
+      "stimulus_id": "listening-68-70",
+      "confidence": 89.5,
+      "issues": []
+    },
+    {
+      "number": 71,
+      "part": "Part 4 - Phần 4",
+      "text": "What did the listener do yesterday?",
+      "options": {
+        "A": "She placed an order.",
+        "B": "She scheduled an event.",
+        "C": "She called a manager.",
+        "D": "She painted some rooms."
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-71-73",
+      "stimulus_id": null,
+      "confidence": 94.9,
+      "issues": []
+    },
+    {
+      "number": 72,
+      "part": "Part 4 - Phần 4",
+      "text": "What problem does the speaker mention?",
+      "options": {
+        "A": "has increased.",
+        "B": "A machine needs to be repaired.",
+        "C": "A product is not available.",
+        "D": "A performance has been canceled."
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-71-73",
+      "stimulus_id": null,
+      "confidence": 94.9,
+      "issues": []
+    },
+    {
+      "number": 73,
+      "part": "Part 4 - Phần 4",
+      "text": "What does the speaker offer the listener?",
+      "options": {
+        "A": "Expedited shipping",
+        "B": "A full refund",
+        "C": "A free consultation",
+        "D": "A discount"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-71-73",
+      "stimulus_id": null,
+      "confidence": 94.9,
+      "issues": []
+    },
+    {
+      "number": 74,
+      "part": "Part 4 - Phần 4",
+      "text": "A ccording to the speaker, what is special about Osterwind Estate?",
+      "options": {
+        "A": "It houses many historic paintings.",
+        "B": "It was designed by its owner.",
+        "C": "It includes a botanical garden.",
+        "D": "It is used as a museum."
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-74-76",
+      "stimulus_id": null,
+      "confidence": 94.9,
+      "issues": []
+    },
+    {
+      "number": 75,
+      "part": "Part 4 - Phần 4",
+      "text": "Why are the listeners at Osterwind Estate?",
+      "options": {
+        "A": "To attend an awards ceremony",
+        "B": "To apply for landscaping jobs",
+        "C": "To take a tour of a building",
+        "D": "To clean up some gardens"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-74-76",
+      "stimulus_id": null,
+      "confidence": 94.9,
+      "issues": []
+    },
+    {
+      "number": 76,
+      "part": "Part 4 - Phần 4",
+      "text": "What will the listeners receive?",
+      "options": {
+        "A": "Gift-shop coupons",
+        "B": "Free passes",
+        "C": "Lunch boxes",
+        "D": "T-shirts"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-74-76",
+      "stimulus_id": null,
+      "confidence": 94.9,
+      "issues": []
+    },
+    {
+      "number": 77,
+      "part": "Part 4 - Phần 4",
+      "text": "Who most likely is the listener?",
+      "options": {
+        "A": "A travel agent",
+        "B": "An administrative assistant",
+        "C": "A flight attendant",
+        "D": "A security guard"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-77-79",
+      "stimulus_id": null,
+      "confidence": 94.9,
+      "issues": []
+    },
+    {
+      "number": 78,
+      "part": "Part 4 - Phần 4",
+      "text": "Why does the speaker say, “I know this is inconvenient”?",
+      "options": {
+        "A": "To suggest a deadline extension",
+        "B": "To report on an additional cost",
+        "C": "To offer an alternative solution",
+        "D": "To apologize for a request"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-77-79",
+      "stimulus_id": null,
+      "confidence": 94.9,
+      "issues": []
+    },
+    {
+      "number": 79,
+      "part": "Part 4 - Phần 4",
+      "text": "What will the speaker do when he arrives in San Diego?",
+      "options": {
+        "A": "Retrieve his messages",
+        "B": "Check in to a hotel",
+        "C": "Change a flight reservation",
+        "D": "Visit a company office"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-77-79",
+      "stimulus_id": null,
+      "confidence": 94.9,
+      "issues": []
+    },
+    {
+      "number": 80,
+      "part": "Part 4 - Phần 4",
+      "text": "What does the speaker say her videos are usually about?",
+      "options": {
+        "A": "How to plan trips",
+        "B": "How to reuse items",
+        "C": "How to organize closets",
+        "D": "How to draw landscapes"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-80-82",
+      "stimulus_id": null,
+      "confidence": 94.9,
+      "issues": []
+    },
+    {
+      "number": 81,
+      "part": "Part 4 - Phần 4",
+      "text": "What first step does the speaker mention?",
+      "options": {
+        "A": "Writing a list",
+        "B": "Finding coupons",
+        "C": "Gathering supplies",
+        "D": "Looking at images online"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-80-82",
+      "stimulus_id": null,
+      "confidence": 94.9,
+      "issues": []
+    },
+    {
+      "number": 82,
+      "part": "Part 4 - Phần 4",
+      "text": "A ccording to the speaker, what can the listeners do on a Web site?",
+      "options": {
+        "A": "Enter a contest",
+        "B": "Subscribe to a video channel",
+        "C": "Submit some photographs",
+        "D": "Download some instructions TEST5 85"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-80-82",
+      "stimulus_id": null,
+      "confidence": 94.9,
+      "issues": []
+    },
+    {
+      "number": 83,
+      "part": "Part 4 - Phần 4",
+      "text": "What is the speech mainly about?",
+      "options": {
+        "A": "A financial report",
+        "B": "A round of promotions",
+        "C": "A product prototype",
+        "D": "A construction project"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-83-85",
+      "stimulus_id": null,
+      "confidence": 94.1,
+      "issues": []
+    },
+    {
+      "number": 84,
+      "part": "Part 4 - Phần 4",
+      "text": "Why does the speaker say, “all required studies were conducted a year ago”?",
+      "options": {
+        "A": "To correct a timeline error",
+        "B": "To provide reassurance",
+        "C": "To deny responsibility for a problem",
+        "D": "To argue that a new study is needed"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-83-85",
+      "stimulus_id": null,
+      "confidence": 94.1,
+      "issues": []
+    },
+    {
+      "number": 85,
+      "part": "Part 4 - Phần 4",
+      "text": "What will the next speaker discuss?",
+      "options": {
+        "A": "A job fair",
+        "B": "A school opening",
+        "C": "A ceremony",
+        "D": "A sporting event"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-83-85",
+      "stimulus_id": null,
+      "confidence": 94.1,
+      "issues": []
+    },
+    {
+      "number": 86,
+      "part": "Part 4 - Phần 4",
+      "text": "Who most likely is the speaker?",
+      "options": {
+        "A": "A salesperson",
+        "B": "A government official",
+        "C": "An interior designer",
+        "D": "A building manager"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-86-88",
+      "stimulus_id": null,
+      "confidence": 94.1,
+      "issues": []
+    },
+    {
+      "number": 87,
+      "part": "Part 4 - Phần 4",
+      "text": "Why does the speaker say, “It’s been ten days”?",
+      "options": {
+        "A": "To explain an expense",
+        "B": "To point out a problem",
+        "C": "To make an offer",
+        "D": "To thank a colleague"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-86-88",
+      "stimulus_id": null,
+      "confidence": 94.1,
+      "issues": []
+    },
+    {
+      "number": 88,
+      "part": "Part 4 - Phần 4",
+      "text": "What does the speaker offer to do?",
+      "options": {
+        "A": "Open the door to a room",
+        "B": "Reset a password",
+        "C": "Send a copy of a document",
+        "D": "Refund a payment"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-86-88",
+      "stimulus_id": null,
+      "confidence": 94.1,
+      "issues": []
+    },
+    {
+      "number": 89,
+      "part": "Part 4 - Phần 4",
+      "text": "What is mentioned about Ferndale Valley?",
+      "options": {
+        "A": "It is heavily forested.",
+        "B": "It attracts many tourists.",
+        "C": "It is developing quickly.",
+        "D": "It is very windy."
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-89-91",
+      "stimulus_id": null,
+      "confidence": 94.1,
+      "issues": []
+    },
+    {
+      "number": 90,
+      "part": "Part 4 - Phần 4",
+      "text": "Who will participate in a project?",
+      "options": {
+        "A": "Biologists",
+        "B": "Farmers",
+        "C": "A irline pilots",
+        "D": "Real estate agents"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-89-91",
+      "stimulus_id": null,
+      "confidence": 94.1,
+      "issues": []
+    },
+    {
+      "number": 91,
+      "part": "Part 4 - Phần 4",
+      "text": "What will the participants receive?",
+      "options": {
+        "A": "Tickets to an industry event",
+        "B": "Technical assistance",
+        "C": "Financial compensation",
+        "D": "A dvertising advice"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-89-91",
+      "stimulus_id": null,
+      "confidence": 94.1,
+      "issues": []
+    },
+    {
+      "number": 92,
+      "part": "Part 4 - Phần 4",
+      "text": "What kind of business does the speaker work for?",
+      "options": {
+        "A": "A construction firm",
+        "B": "A landscaping service",
+        "C": "A storage company",
+        "D": "An auto repair shop"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-92-94",
+      "stimulus_id": null,
+      "confidence": 94.1,
+      "issues": []
+    },
+    {
+      "number": 93,
+      "part": "Part 4 - Phần 4",
+      "text": "Why is the speaker calling?",
+      "options": {
+        "A": "To apologize for a cancellation",
+        "B": "To confirm a delivery",
+        "C": "To share a price quote",
+        "D": "To update some contact information"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-92-94",
+      "stimulus_id": null,
+      "confidence": 94.1,
+      "issues": []
+    },
+    {
+      "number": 94,
+      "part": "Part 4 - Phần 4",
+      "text": "What does the speaker ask the listener to do?",
+      "options": {
+        "A": "Purchase a warranty",
+        "B": "Complete a survey",
+        "C": "Clean up an area",
+        "D": "A pply for a permit"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-92-94",
+      "stimulus_id": null,
+      "confidence": 94.1,
+      "issues": []
+    },
+    {
+      "number": 95,
+      "part": "Part 4 - Phần 4",
+      "text": "What is the purpose of the talk?",
+      "options": {
+        "A": "To discuss a schedule",
+        "B": "To consider changing suppliers",
+        "C": "To train employees",
+        "D": "To develop an inventory system"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-95-97",
+      "stimulus_id": "listening-95-97",
+      "confidence": 94.0,
+      "issues": []
+    },
+    {
+      "number": 96,
+      "part": "Part 4 - Phần 4",
+      "text": "Look at the graphic. Which product does the speaker say is new?",
+      "options": {
+        "A": "Klennlee",
+        "B": "Baxlon",
+        "C": "Z-Factor",
+        "D": "Clean Sure"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-95-97",
+      "stimulus_id": "listening-95-97",
+      "confidence": 94.0,
+      "issues": []
+    },
+    {
+      "number": 97,
+      "part": "Part 4 - Phần 4",
+      "text": "What happens at one o’clock on Tuesdays?",
+      "options": {
+        "A": "An expense report is due.",
+        "B": "A work shift begins.",
+        "C": "A staff meeting is held.",
+        "D": "A delivery arrives."
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-95-97",
+      "stimulus_id": "listening-95-97",
+      "confidence": 94.0,
+      "issues": []
+    },
+    {
+      "number": 98,
+      "part": "Part 4 - Phần 4",
+      "text": "What is the topic of the course?",
+      "options": {
+        "A": "Marketing",
+        "B": "Investing",
+        "C": "Documentary filmmaking",
+        "D": "Software development"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-98-100",
+      "stimulus_id": "listening-98-100",
+      "confidence": 94.0,
+      "issues": []
+    },
+    {
+      "number": 99,
+      "part": "Part 4 - Phần 4",
+      "text": "Look at the graphic. Which step will be discussed today?",
+      "options": {
+        "A": "Step 1",
+        "B": "Step 2",
+        "C": "Step 3",
+        "D": "Step 4"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-98-100",
+      "stimulus_id": "listening-98-100",
+      "confidence": 94.0,
+      "issues": []
+    },
+    {
+      "number": 100,
+      "part": "Part 4 - Phần 4",
+      "text": "What will the listeners do next?",
+      "options": {
+        "A": "Read a handout",
+        "B": "Watch a video",
+        "C": "Take a coffee break",
+        "D": "Listen to a guest speaker Listening test. TEST5 87"
+      },
+      "option_letters": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "correct": null,
+      "group_id": "listening-98-100",
+      "stimulus_id": "listening-98-100",
+      "confidence": 94.0,
+      "issues": []
+    }
+  ],
+  "stimuli": [
+    {
+      "id": "listening-photo-1",
+      "kind": "image",
+      "title": "",
+      "assets": [
+        {
+          "id": "3dcf5df8259f4a0d99664c46105d5c4f.webp",
+          "url": "/api/extractions/lc5-dump/assets/3dcf5df8259f4a0d99664c46105d5c4f.webp",
+          "page": 1,
+          "bbox": [
+            0.26844,
+            0.05956,
+            0.68642,
+            0.47592
+          ],
+          "width": 1037,
+          "height": 1461
+        }
+      ],
+      "question_numbers": [
+        1
+      ],
+      "page_numbers": [
+        1
+      ],
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "id": "listening-photo-2",
+      "kind": "image",
+      "title": "",
+      "assets": [
+        {
+          "id": "72ae7c010b3f4d5b8d187924ee0b6a02.webp",
+          "url": "/api/extractions/lc5-dump/assets/72ae7c010b3f4d5b8d187924ee0b6a02.webp",
+          "page": 1,
+          "bbox": [
+            0.15034,
+            0.53463,
+            0.78315,
+            0.85409
+          ],
+          "width": 1570,
+          "height": 1121
+        }
+      ],
+      "question_numbers": [
+        2
+      ],
+      "page_numbers": [
+        1
+      ],
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "id": "listening-photo-3",
+      "kind": "image",
+      "title": "",
+      "assets": [
+        {
+          "id": "dfc44f7ca17c496d8ff89b5a3a68bed0.webp",
+          "url": "/api/extractions/lc5-dump/assets/dfc44f7ca17c496d8ff89b5a3a68bed0.webp",
+          "page": 2,
+          "bbox": [
+            0.17009,
+            0.06013,
+            0.80411,
+            0.387
+          ],
+          "width": 1573,
+          "height": 1147
+        }
+      ],
+      "question_numbers": [
+        3
+      ],
+      "page_numbers": [
+        2
+      ],
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "id": "listening-photo-4",
+      "kind": "image",
+      "title": "",
+      "assets": [
+        {
+          "id": "61db9b9cb55a4acd8d227a7f806945db.webp",
+          "url": "/api/extractions/lc5-dump/assets/61db9b9cb55a4acd8d227a7f806945db.webp",
+          "page": 2,
+          "bbox": [
+            0.17291,
+            0.44087,
+            0.80492,
+            0.76831
+          ],
+          "width": 1568,
+          "height": 1149
+        }
+      ],
+      "question_numbers": [
+        4
+      ],
+      "page_numbers": [
+        2
+      ],
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "id": "listening-photo-5",
+      "kind": "image",
+      "title": "",
+      "assets": [
+        {
+          "id": "896eb34c77974952a5a298effc596d02.webp",
+          "url": "/api/extractions/lc5-dump/assets/896eb34c77974952a5a298effc596d02.webp",
+          "page": 3,
+          "bbox": [
+            0.15437,
+            0.05928,
+            0.78638,
+            0.38672
+          ],
+          "width": 1568,
+          "height": 1149
+        }
+      ],
+      "question_numbers": [
+        5
+      ],
+      "page_numbers": [
+        3
+      ],
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "id": "listening-photo-6",
+      "kind": "image",
+      "title": "",
+      "assets": [
+        {
+          "id": "6c4619ae3a8b4150814c91244d504e4a.webp",
+          "url": "/api/extractions/lc5-dump/assets/6c4619ae3a8b4150814c91244d504e4a.webp",
+          "page": 3,
+          "bbox": [
+            0.26965,
+            0.44913,
+            0.68722,
+            0.86093
+          ],
+          "width": 1036,
+          "height": 1445
+        }
+      ],
+      "question_numbers": [
+        6
+      ],
+      "page_numbers": [
+        3
+      ],
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "id": "listening-62-64",
+      "kind": "image",
+      "title": "",
+      "assets": [
+        {
+          "id": "eee68f1d6aaf4128a4c064fc862aaa83.webp",
+          "url": "/api/extractions/lc5-dump/assets/eee68f1d6aaf4128a4c064fc862aaa83.webp",
+          "page": 7,
+          "bbox": [
+            0.50141,
+            0.06213,
+            0.86739,
+            0.15731
+          ],
+          "width": 908,
+          "height": 334
+        }
+      ],
+      "question_numbers": [
+        62,
+        63,
+        64
+      ],
+      "page_numbers": [
+        7
+      ],
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "id": "listening-65-67",
+      "kind": "image",
+      "title": "",
+      "assets": [
+        {
+          "id": "8467a4e66838414d83746ca2797b52bc.webp",
+          "url": "/api/extractions/lc5-dump/assets/8467a4e66838414d83746ca2797b52bc.webp",
+          "page": 8,
+          "bbox": [
+            0.13664,
+            0.05614,
+            0.4599,
+            0.25477
+          ],
+          "width": 802,
+          "height": 697
+        }
+      ],
+      "question_numbers": [
+        65,
+        66,
+        67
+      ],
+      "page_numbers": [
+        8
+      ],
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "id": "listening-68-70",
+      "kind": "image",
+      "title": "",
+      "assets": [
+        {
+          "id": "6f1362b7a906494d81af84322eca612d.webp",
+          "url": "/api/extractions/lc5-dump/assets/6f1362b7a906494d81af84322eca612d.webp",
+          "page": 8,
+          "bbox": [
+            0.53728,
+            0.05785,
+            0.87344,
+            0.25648
+          ],
+          "width": 834,
+          "height": 697
+        }
+      ],
+      "question_numbers": [
+        68,
+        69,
+        70
+      ],
+      "page_numbers": [
+        8
+      ],
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "id": "listening-95-97",
+      "kind": "image",
+      "title": "",
+      "assets": [
+        {
+          "id": "6d4264e111fa40dc929f74214781cd83.webp",
+          "url": "/api/extractions/lc5-dump/assets/6d4264e111fa40dc929f74214781cd83.webp",
+          "page": 11,
+          "bbox": [
+            0.11245,
+            0.05329,
+            0.43531,
+            0.25164
+          ],
+          "width": 801,
+          "height": 696
+        }
+      ],
+      "question_numbers": [
+        95,
+        96,
+        97
+      ],
+      "page_numbers": [
+        11
+      ],
+      "confidence": 100.0,
+      "issues": []
+    },
+    {
+      "id": "listening-98-100",
+      "kind": "image",
+      "title": "",
+      "assets": [
+        {
+          "id": "efc0fb12db924cfbb72a80d18deccca0.webp",
+          "url": "/api/extractions/lc5-dump/assets/efc0fb12db924cfbb72a80d18deccca0.webp",
+          "page": 11,
+          "bbox": [
+            0.51471,
+            0.055,
+            0.85691,
+            0.16842
+          ],
+          "width": 849,
+          "height": 398
+        }
+      ],
+      "question_numbers": [
+        98,
+        99,
+        100
+      ],
+      "page_numbers": [
+        11
+      ],
+      "confidence": 100.0,
+      "issues": []
+    }
+  ],
+  "issues": [],
+  "metadata": {
+    "page_count": 11,
+    "duration_seconds": 35.43,
+    "text_mode": "ocr",
+    "text_layer_pages": [],
+    "skipped_pages": [],
+    "content_start_page": 1,
+    "detected_question_range": [
+      1,
+      100
+    ],
+    "repeated_watermarks_filtered": [],
+    "reading_roi": {
+      "enabled": false,
+      "locator_pages": 0,
+      "roi_pages": 0,
+      "roi_count": 0,
+      "fallback_pages": [],
+      "recovery_pages": [],
+      "recovery_count": 0,
+      "locator_seconds": 0.0,
+      "roi_seconds": 0.0,
+      "recovery_seconds": 0.0
+    }
+  }
+}

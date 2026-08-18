@@ -235,6 +235,48 @@ def test_local_dictionary_returns_immediately_without_external_requests(tmp_path
     assert result["local"] is True
 
 
+def test_local_dictionary_stems_inflected_words(tmp_path) -> None:
+    database_path = tmp_path / "dictionary.sqlite3"
+    connection = sqlite3.connect(database_path)
+    connection.execute(
+        "CREATE TABLE entries (term_key TEXT PRIMARY KEY, payload TEXT NOT NULL)"
+    )
+    connection.execute(
+        "INSERT INTO entries(term_key, payload) VALUES (?, ?)",
+        (
+            "require",
+            json.dumps(
+                {
+                    "vocabulary": "require",
+                    "ipa": "/rɪˈkwaɪə/",
+                    "details": [
+                        {
+                            "pos": "verb",
+                            "means": [{"mean": "yêu cầu", "example": ["We require details."]}],
+                        }
+                    ],
+                }
+            ),
+        ),
+    )
+    connection.commit()
+    connection.close()
+
+    def no_network(request: httpx.Request) -> httpx.Response:
+        raise AssertionError(f"Stem match must not call network: {request.url}")
+
+    client = httpx.Client(transport=httpx.MockTransport(no_network))
+    service = DictionaryService(
+        client=client,
+        cache=MemoryCache(),
+        local_dictionary=LocalDictionary(str(database_path)),
+    )
+    result = service.lookup("required", "en")
+    assert result["query"] == "required"
+    assert result["resolved_english_word"] == "require"
+    assert result["translations"] == ["yêu cầu"]
+
+
 def test_partial_and_total_provider_failures() -> None:
     def partial_handler(request: httpx.Request) -> httpx.Response:
         if request.url.host == "api.dictionaryapi.dev":

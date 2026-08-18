@@ -237,7 +237,7 @@ def _normalize_tesseract_data(
 
     lines: list[OCRLine] = []
     for words in grouped.values():
-        words.sort(key=lambda word: (min(point[1] for point in word.box), min(point[0] for point in word.box)))
+        words.sort(key=lambda word: min(point[0] for point in word.box))
         left = min(point[0] for word in words for point in word.box)
         top = min(point[1] for word in words for point in word.box)
         right = max(point[0] for word in words for point in word.box)
@@ -253,7 +253,6 @@ def _normalize_tesseract_data(
         )
     lines.sort(key=lambda line: (min(point[1] for point in line.box), min(point[0] for point in line.box)))
     return OCRResult(tuple(lines), elapsed, provider)
-
 
 def _tesseract_binary() -> str | None:
     configured = os.getenv("TESSERACT_CMD", "").strip()

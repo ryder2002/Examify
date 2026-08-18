@@ -159,6 +159,13 @@ class Job(Base):
     error: Mapped[str | None] = mapped_column(Text)
     payload: Mapped[dict] = mapped_column(JSON, default=dict)
     source_object_key: Mapped[str | None] = mapped_column(String(1024))
+    ingest_mode: Mapped[str] = mapped_column(
+        String(24), default="server_ocr", server_default="server_ocr", index=True
+    )
+    client_request_id: Mapped[str | None] = mapped_column(String(64))
+    manifest_hash: Mapped[str | None] = mapped_column(String(64))
+    draft_revision: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, onupdate=utcnow
@@ -166,6 +173,14 @@ class Job(Base):
 
     __table_args__ = (
         Index("ix_jobs_cache", "file_hash", "exam_type", "pipeline_version", "status"),
+        Index(
+            "uq_jobs_owner_client_request",
+            "owner_user_id",
+            "client_request_id",
+            unique=True,
+            postgresql_where=text("client_request_id IS NOT NULL"),
+        ),
+        Index("ix_jobs_status_expires", "status", "expires_at"),
     )
 
 
@@ -437,7 +452,9 @@ class ExamSource(Base):
     )
     component: Mapped[str] = mapped_column(String(20), default="main")
     bucket: Mapped[str] = mapped_column(String(80))
-    object_key: Mapped[str] = mapped_column(String(1024), unique=True, index=True)
+    # Immutable objects may be referenced by both a component exam and its
+    # combined Full Test; uniqueness belongs to (exam_id, component), not key.
+    object_key: Mapped[str] = mapped_column(String(1024), index=True)
     filename: Mapped[str] = mapped_column(String(512))
     content_type: Mapped[str] = mapped_column(String(160), default="application/pdf")
     size: Mapped[int] = mapped_column(BigInteger, default=0)
@@ -679,6 +696,14 @@ class Attempt(Base):
             sqlite_where=text(
                 "status = 'in_progress' AND class_assignment_id IS NOT NULL"
             ),
+        ),
+        Index(
+            "ix_attempts_student_submitted_cursor",
+            "class_member_id",
+            text("submitted_at DESC"),
+            text("id DESC"),
+            postgresql_where=text("status = 'submitted'"),
+            sqlite_where=text("status = 'submitted'"),
         ),
     )
 

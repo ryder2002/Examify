@@ -35,11 +35,16 @@ from fastapi import (
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
 
-from answer_key import answer_key_scope_detail, extract_answer_key_image
+from config import settings
 from audio_processing import prepare_web_audio
 from exam_solutions import SolutionValidationError, validate_solutions
 from exam_bank_scope import teacher_scoped_title_key
 from job_store import store
+# The web flow deliberately uses the same deterministic pipeline as the
+# desktop sidecar. Keeping these imports unconditional prevents a production
+# API from accepting an upload and discovering that OCR is unavailable only
+# inside the worker.
+from answer_key import answer_key_scope_detail, extract_answer_key_image
 from pipeline import (
     create_manual_stimulus,
     extract_exam,
@@ -57,7 +62,6 @@ from schemas import (
     Stimulus,
     ensure_question_coverage,
 )
-from config import settings
 from metrics import (
     HTTP_DURATION,
     HTTP_IN_FLIGHT,
@@ -79,6 +83,7 @@ if not settings.desktop:
         set_access_cookie,
     )
     from platform_api import persist_final_exam, router as platform_router
+    from client_extraction_api import router as client_extraction_router
     from desktop_sync_api import router as desktop_sync_router
     from dictionary_api import router as dictionary_router
     from guide_api import router as guide_router
@@ -173,7 +178,18 @@ MAX_BYTES = 50 * 1024 * 1024
 MAX_AUDIO_BYTES = 50 * 1024 * 1024
 MAX_TOTAL_AUDIO_BYTES = 300 * 1024 * 1024
 MAX_ANSWER_IMAGE_BYTES = 10 * 1024 * 1024
-EXTRACTION_EXECUTOR = ThreadPoolExecutor(max_workers=1, thread_name_prefix="toeic-ocr")
+
+
+def _require_local_legacy_ocr() -> None:
+    """Compatibility hook; server OCR is now the canonical web path."""
+    return None
+
+
+EXTRACTION_EXECUTOR = (
+    ThreadPoolExecutor(max_workers=1, thread_name_prefix="desktop-ocr")
+    if settings.desktop or not settings.use_celery
+    else None
+)
 
 
 def _uses_persistent_job_objects() -> bool:
@@ -249,6 +265,7 @@ async def lifespan(_app: FastAPI):
 app = FastAPI(title="Tool Tạo Đề TOEIC", version="2.0.0", lifespan=lifespan)
 if not settings.desktop:
     app.include_router(platform_router)
+    app.include_router(client_extraction_router)
     app.include_router(desktop_sync_router)
     app.include_router(dictionary_router)
     app.include_router(guide_router)
@@ -392,6 +409,8 @@ async def device_authentication(request: Request, call_next):
         role = identity["role"]
         creator_paths = (
             path.startswith("/api/extractions")
+            or path.startswith("/api/v1/client-extractions")
+            or path.startswith("/api/v1/solution-imports")
             or path.startswith("/api/v1/exams")
             or path.startswith("/api/v1/tags")
             or path.startswith("/api/v1/desktop/sync")
@@ -605,10 +624,10 @@ def health_ready():
         "queue": settings.use_celery,
         "checks": checks,
         "profile": settings.app_profile,
-        "processing_location": "LOCAL_EDGE" if settings.desktop else "REMOTE_SERVER",
-        "edge_ocr": settings.desktop,
-        "ocr_enabled": settings.ocr_enabled,
-        "ocr_engine": "tesseract",
+        "processing_location": "LOCAL_SIDECAR" if settings.desktop else "REMOTE_SERVER",
+        "edge_ocr": False,
+        "ocr_enabled": True,
+        "ocr_engine": dependencies.get("ocr_engine", "unknown"),
         "scratch": scratch,
         **dependencies,
     }
@@ -1036,6 +1055,7 @@ async def create_extraction(
     requested_count: int | None = Form(default=None),
     no_cache: bool = Form(default=False),
 ) -> JSONResponse:
+    _require_local_legacy_ocr()
     identity = current_identity(request, required=False)
     owner_user_id = (
         _desktop_user_id(request)
@@ -1051,16 +1071,6 @@ async def create_extraction(
         Path(file.filename or "").name,
         exam_type,
     )
-    if not settings.desktop and not settings.ocr_enabled:
-        logger.warning(
-            "[OCR_ROUTE] location=REMOTE_SERVER event=rejected reason=ocr-disabled"
-        )
-        raise HTTPException(
-            status_code=503,
-            detail=(
-                "OCR trên máy chủ đã tắt. Hãy bật OCR_ENABLED để xử lý tài liệu."
-            ),
-        )
     if not file.filename:
         raise HTTPException(status_code=400, detail="Thiếu tên file")
     if requested_count is not None and not 1 <= requested_count <= 100:
@@ -1468,22 +1478,26 @@ async def create_extraction(
     if job_id is None:
         raise HTTPException(status_code=500, detail="Không tạo được job xử lý")
 
-    if settings.use_celery:
+    if settings.use_celery and not settings.desktop:
+        # Import lazily so API startup does not create a second Celery app and
+        # so the route remains importable in lightweight unit-test profiles.
         from ocr_tasks import process_extraction
 
-        process_extraction.delay(job_id)
-        logger.info(
-            "[OCR_ROUTE] location=%s event=queued_celery job=%s", processing_location, job_id
-        )
-        if hasattr(store, "evict_local"):
-            store.evict_local(job_id)
-    else:
+        process_extraction.apply_async(args=[job_id], queue="ocr")
+        queue_event = "queued_server_ocr"
+    elif EXTRACTION_EXECUTOR is not None:
+        # Development/non-persistent fallback. Production uses the bounded
+        # Celery OCR queue above, never one OCR thread per API request.
         EXTRACTION_EXECUTOR.submit(_run_extraction_job, job_id, input_path)
-        logger.info(
-            "[OCR_ROUTE] location=%s event=queued_local_executor job=%s",
-            processing_location,
-            job_id,
-        )
+        queue_event = "queued_local_executor"
+    else:  # pragma: no cover - defensive configuration failure
+        raise HTTPException(status_code=503, detail="OCR worker chưa sẵn sàng")
+    logger.info(
+        "[OCR_ROUTE] location=%s event=%s job=%s",
+        processing_location,
+        queue_event,
+        job_id,
+    )
     return JSONResponse(
         status_code=202,
         content={
@@ -1497,6 +1511,7 @@ async def create_extraction(
 
 @app.get("/api/extractions/{job_id}", response_model=ExamDraft)
 def get_extraction(job_id: str, request: Request) -> ExamDraft:
+    _require_local_legacy_ocr()
     _check_job_access(job_id, request)
     try:
         state = store.read(job_id)
@@ -1507,6 +1522,7 @@ def get_extraction(job_id: str, request: Request) -> ExamDraft:
 
 @app.get("/api/extractions/{job_id}/assets/{asset_id}")
 def get_asset(job_id: str, asset_id: str, request: Request) -> Response:
+    _require_local_legacy_ocr()
     _check_job_access(job_id, request)
     if _uses_persistent_job_objects():
         try:
@@ -1539,6 +1555,7 @@ def get_asset(job_id: str, asset_id: str, request: Request) -> Response:
 
 @app.get("/api/extractions/{job_id}/audio/{audio_id}")
 def get_audio(job_id: str, audio_id: str, request: Request) -> Response:
+    _require_local_legacy_ocr()
     _check_job_access(job_id, request)
     try:
         state = store.read(job_id)
@@ -1582,6 +1599,7 @@ def import_answer_key_image(
     request: Request,
     file: UploadFile = File(...),
 ) -> JSONResponse:
+    _require_local_legacy_ocr()
     _check_job_access(job_id, request, write=True)
     try:
         state = store.read(job_id)
@@ -1662,6 +1680,7 @@ def import_answer_key_image(
 
 @app.get("/api/extractions/{job_id}/pages/{page_number}")
 def get_source_page(job_id: str, page_number: int, request: Request) -> Response:
+    _require_local_legacy_ocr()
     _check_job_access(job_id, request)
     if page_number < 1 or page_number > 500:
         raise HTTPException(status_code=404, detail="Trang không hợp lệ")
@@ -1701,6 +1720,7 @@ def get_source_page(job_id: str, page_number: int, request: Request) -> Response
 
 @app.patch("/api/extractions/{job_id}/draft", response_model=ExamDraft)
 def patch_draft(job_id: str, patch: DraftPatch, request: Request) -> ExamDraft:
+    _require_local_legacy_ocr()
     _check_job_access(job_id, request, write=True)
     try:
         state = store.read(job_id)
@@ -1822,6 +1842,7 @@ def add_manual_stimulus(
     request: Request,
 ) -> ExamDraft:
     """Replace a question's auto crop with a teacher-selected source-page crop."""
+    _require_local_legacy_ocr()
     _check_job_access(job_id, request, write=True)
     try:
         state = store.read(job_id)
@@ -1916,6 +1937,7 @@ def _select_grouped_questions(
 def finalize_extraction(
     job_id: str, request: FinalizeRequest, http_request: Request
 ) -> FinalExam:
+    _require_local_legacy_ocr()
     _check_job_access(job_id, http_request, write=True)
     try:
         state = store.read(job_id)
@@ -2139,6 +2161,154 @@ def desktop_exams(request: Request) -> dict[str, object]:
     desktop_store.repair_legacy_split_exams()
     desktop_store.normalize_exams()
     return {"items": desktop_store.list_exams()}
+
+
+@app.post("/api/desktop/client-extractions/commit")
+async def desktop_client_extraction_commit(
+    request: Request,
+    manifest: str = Form(...),
+    manifest_sha256: str = Form(...),
+    client_request_id: str = Form(...),
+    title: str = Form(...),
+    category: str = Form(default=""),
+    file_ids: str = Form(...),
+    files: list[UploadFile] = File(...),
+) -> dict[str, object]:
+    """Persist a browser OCR result locally and enqueue normal desktop sync."""
+    if not settings.desktop:
+        raise HTTPException(status_code=404, detail="Desktop API không khả dụng")
+    if len(manifest.encode("utf-8")) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="Manifest vượt quá 5 MiB")
+    try:
+        payload = json.loads(manifest)
+        identifiers = json.loads(file_ids)
+    except json.JSONDecodeError as exc:
+        raise HTTPException(status_code=422, detail="Manifest/file_ids không hợp lệ") from exc
+    if not isinstance(payload, dict) or not isinstance(identifiers, list):
+        raise HTTPException(status_code=422, detail="Manifest/file_ids không hợp lệ")
+    try:
+        client_request_id = str(uuid.UUID(client_request_id))
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail="client_request_id không hợp lệ") from exc
+    canonical = json.dumps(
+        payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    ).encode("utf-8")
+    if hashlib.sha256(canonical).hexdigest() != manifest_sha256.lower():
+        raise HTTPException(status_code=422, detail="manifest_sha256 không khớp")
+    questions = list(payload.get("questions") or [])
+    stimuli = list(payload.get("stimuli") or [])
+    assets = list(payload.get("assets") or [])
+    media = list(payload.get("media") or [])
+    if not 1 <= len(questions) <= 200 or len(stimuli) > 200 or len(assets) > 300:
+        raise HTTPException(status_code=422, detail="Manifest vượt giới hạn dữ liệu")
+    if any(str(issue.get("severity") or "") == "error" for issue in payload.get("issues") or []):
+        raise HTTPException(status_code=422, detail="Manifest còn issue OCR mức error")
+    numbers = [int(question.get("number") or 0) for question in questions]
+    if len(numbers) != len(set(numbers)) or any(number < 1 or number > 200 for number in numbers):
+        raise HTTPException(status_code=422, detail="Số câu bị trùng hoặc ngoài phạm vi")
+    if len(identifiers) != len(files) or len(set(map(str, identifiers))) != len(identifiers):
+        raise HTTPException(status_code=422, detail="Danh sách file không khớp")
+    expected_file_ids = {
+        f"source-{payload.get('exam_type') or 'main'}.pdf",
+        *(str(item["id"]) for item in assets),
+        *(str(item["id"]) for item in media),
+    }
+    if set(map(str, identifiers)) != expected_file_ids:
+        raise HTTPException(status_code=422, detail="Thiếu hoặc thừa asset trong commit")
+
+    answer_key = {
+        int(number): str(letter).upper()
+        for number, letter in dict(payload.get("answer_key") or {}).items()
+    }
+    normalized_questions = []
+    for question in questions:
+        item = dict(question)
+        if int(item["number"]) in answer_key:
+            item["correct"] = answer_key[int(item["number"])]
+        normalized_questions.append(item)
+    normalized_stimuli = []
+    assets_by_id = {str(asset["id"]): asset for asset in assets}
+    for stimulus in stimuli:
+        item = dict(stimulus)
+        item["assets"] = [
+            {**dict(asset), "url": str(asset["id"])}
+            for asset in item.get("assets") or []
+            if str(asset.get("id") or "") in assets_by_id
+        ]
+        normalized_stimuli.append(item)
+    audios = [
+        {
+            "id": str(item["id"]),
+            "url": str(item["id"]),
+            "filename": str(item.get("filename") or item["id"]),
+            "content_type": str(item.get("content_type") or "audio/mpeg"),
+            "size": int(item.get("size") or 0),
+            "part": item.get("part") or "full",
+            "scope": item.get("scope") or "part",
+            "question_numbers": item.get("question_numbers") or [],
+            "group_id": item.get("group_id"),
+        }
+        for item in media
+    ]
+    exam_payload = {
+        "schema_version": 2,
+        "client_exam_id": client_request_id,
+        "exam_type": payload.get("exam_type"),
+        "requested_count": payload.get("requested_count"),
+        "returned_count": len(normalized_questions),
+        "total": len(normalized_questions),
+        "questions": normalized_questions,
+        "stimuli": normalized_stimuli,
+        "audios": audios,
+        "audio": audios[0] if len(audios) == 1 and audios[0]["scope"] == "full" else None,
+        "solutions": list(payload.get("solutions") or []),
+        "metadata": {
+            **dict(payload.get("metadata") or {}),
+            "ingest_mode": "client_ocr",
+            "source_sha256": payload.get("source_sha256"),
+        },
+    }
+    max_total = 150 * 1024 * 1024
+    total = 0
+    with tempfile.TemporaryDirectory(prefix="desktop-client-commit-") as directory:
+        paths: dict[str, tuple[Path, str, str]] = {}
+        try:
+            for raw_id, upload in zip(identifiers, files, strict=True):
+                file_id = str(raw_id)
+                if Path(file_id).name != file_id or not file_id:
+                    raise HTTPException(status_code=422, detail="ID file không hợp lệ")
+                destination = Path(directory) / file_id
+                with destination.open("wb") as target:
+                    while chunk := upload.file.read(1024 * 1024):
+                        total += len(chunk)
+                        if total > max_total:
+                            raise HTTPException(status_code=413, detail="Tổng asset vượt 150 MiB")
+                        target.write(chunk)
+                if file_id.startswith("source-"):
+                    kind, content_type = "source", "application/pdf"
+                elif file_id in {str(item["id"]) for item in media}:
+                    matching = next(item for item in media if str(item["id"]) == file_id)
+                    kind = "audio"
+                    content_type = str(matching.get("content_type") or "audio/mpeg")
+                else:
+                    kind, content_type = "stimulus", "image/webp"
+                paths[file_id] = (destination, kind, content_type)
+        finally:
+            for upload in files:
+                await upload.close()
+        source_id = f"source-{payload.get('exam_type') or 'main'}.pdf"
+        source = paths.get(source_id)
+        if source is None or source[0].stat().st_size > 50 * 1024 * 1024:
+            raise HTTPException(status_code=422, detail="Thiếu PDF nguồn hoặc PDF vượt 50 MiB")
+        if hashlib.sha256(source[0].read_bytes()).hexdigest() != str(payload.get("source_sha256") or ""):
+            raise HTTPException(status_code=422, detail="Hash PDF nguồn không khớp")
+        client_exam_id = _desktop_store(request).save_exam(
+            exam_payload,
+            title=title.strip() or "TOEIC Exam",
+            category=category.strip(),
+            asset_paths=paths,
+        )
+    return {"status": "committed", "exam_id": client_exam_id, "client_exam_id": client_exam_id}
 
 
 class DesktopCombineRequest(BaseModel):

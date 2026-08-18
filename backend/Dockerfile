@@ -3,16 +3,16 @@ FROM python:3.11.15-slim
 ARG APP_REVISION=unknown
 LABEL org.opencontainers.image.revision="${APP_REVISION}"
 
-# Poppler renders scanned PDF pages; Tesseract provides bounded local OCR.
+# OCR is intentionally server-side: the browser only uploads and polls a job.
+# Poppler renders pages and the pinned Tesseract/Python stack performs the
+# deterministic recognition in the bounded Celery worker.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    poppler-utils \
     libreoffice-writer \
     ffmpeg \
-    libgl1 \
+    curl \
+    poppler-utils \
     tesseract-ocr \
     tesseract-ocr-eng \
-    tesseract-ocr-osd \
-    curl \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -29,12 +29,12 @@ COPY --chown=examify:examify . .
 # either module (for example a stale/partial checkout), the image build must
 # fail instead of starting a worker that accepts jobs and fails at runtime.
 COPY --chown=examify:examify audio_processing.py toeic_audio_cutter.py ./
-RUN python -c 'import audio_processing, toeic_audio_cutter, pytesseract; print(pytesseract.get_tesseract_version())'
+RUN tesseract --version >/dev/null \
+    && python -c 'import audio_processing, toeic_audio_cutter, pipeline, pytesseract, pdf2image, cv2'
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PYTHONPATH=/app \
-    TESSERACT_LANG=eng
+    PYTHONPATH=/app
 
 USER examify
 

@@ -1,5 +1,24 @@
 # Báo cáo triển khai production-ready
 
+## Current OCR architecture (server-tesseract-v3.6)
+
+The current release uses FastAPI + Celery/Redis for server OCR. Poppler renders
+pages and the pinned Tesseract `eng` adapter supplies geometry/confidence to the
+layout-aware parser. The browser uploads the source and polls job progress; it
+does not run Tesseract.js for new PDF creation.
+
+`/api/extractions` is the canonical server OCR API. Persistent jobs keep source
+PDF/audio in MinIO and materialize only a bounded worker cache. The worker queue
+is single-concurrency in Compose, page OCR defaults to two workers, and
+Tesseract subprocesses are capped at two with `OMP_THREAD_LIMIT=1`.
+
+Pipeline 3.6 adds conservative repeated central-watermark filtering, preserves
+the original source pages for review, and uses question-number/header anchors
+for Part 3/4 and difficult Reading blocks. Old `/api/v1/client-extractions`
+drafts remain compatibility-only.
+
+The browser-only migration history below is retained for audit context only.
+
 ## Monolith branding và runtime setup (2026-08-12)
 
 - Frontend dùng thống nhất `frontend/public/logo.png` cho metadata, PWA,
@@ -398,20 +417,21 @@ This is a startup reliability fix, not evidence that the 200-user load target
 has been certified. Load and failure testing remain pending on a staging
 environment with representative exam/audio data.
 
-## 8. OCR extraction verification — LC.pdf / RC.pdf
+## 8. OCR extraction verification — LC5.pdf / RC5.pdf
 
-Pipeline dùng chính sách raster theo loại đề: Listening mặc định 240 DPI để
-giảm kích thước input gần ngưỡng hiệu dụng 2000px của PP-OCRv4; Reading giữ
-300 DPI vì RC có passage Part 6 dày. Có thể đặt `OCR_RENDER_DPI=300` nếu ưu
-tiên fidelity tối đa.
+Pipeline server dùng Tesseract `eng` và Poppler ở 300 DPI. Listening giữ scale
+1.0 để bảo vệ chữ nhỏ Part 3/4; Reading giữ fast pass rồi retry theo số câu /
+header khi cần. Watermark lặp ở vùng trung tâm chỉ bị loại khỏi evidence OCR;
+ảnh trang gốc và crop review không bị sửa.
 
 | File | Trang | Kết quả | OCR duration |
 |---|---:|---|---:|
-| LC.pdf | 11 | 100 câu, mapping Part 1/graphic đúng, không có crop issue | 59.12s |
-| RC.pdf | 28 | 101–200 đúng thứ tự, không có extraction issue | 165.07s |
+| LC5.pdf | 11 | 100/100; Part 3–4 69/69; không issue | 37.1s |
+| RC5.pdf | 28 | 100/100; options 100/100; 144–146/171 recovered | 85.3s |
 
-LC trước sửa chạy 212.99s và nhận nhầm `content_start_page=4`, gây lệch crop
-ảnh/graphic như ảnh chụp. Đây là số đo một job; chưa phải load test đồng thời.
+Đây là số đo một job trên môi trường kiểm thử; chưa phải chứng nhận load
+đồng thời 200 user. RC5 còn warning không chặn finalize ở câu 109 vì số câu
+được khôi phục từ nhóm phương án có bằng chứng hình học.
 
 ## 9. Review crop thủ công và PDF scan in — 2026-08-08
 
@@ -1030,10 +1050,8 @@ image backend đã có cả `ffmpeg` và `ffprobe`. Celery vẫn có hard limit 
   100/100 câu, `issues=[]`.
 ## Desktop OCR, đồng bộ revision và parallel audio/OCR (2026-08-11)
 
-- Provider Desktop dùng policy `auto`: Windows chọn DirectML trước CPU, Apple
-  Silicon chọn CoreML, Intel Mac giữ CPU pool ổn định; có override vận hành
-  `OCR_PROVIDER=cpu|dml|coreml|cuda`. Override không tồn tại trong artifact sẽ
-  fail-fast thay vì âm thầm báo GPU giả.
+- Mục này mô tả sidecar legacy trước kiến trúc browser OCR. Bản Tauri mới dùng
+  cùng Tesseract.js/WebAssembly với web và không còn biến chọn provider native.
 - Native smoke nhận `--expected-provider`. Windows release bắt buộc
   `DmlExecutionProvider`; macOS ARM bắt buộc `CoreMLExecutionProvider`; macOS
   Intel bắt buộc `CPUExecutionProvider`. Tham số `EnableNvidiaGpu` không có tác
@@ -1187,3 +1205,52 @@ Celery `succeeded` trong 74,9 giây.
   routing + owner-scope integration PASS (28 tests). Golden PDF không được
   chạy lại trong lượt này vì `LC.pdf`/`RC.pdf` không còn trong workspace hiện
   tại; cần chạy lại golden sau khi đặt hai fixture đã cắt bìa vào repository.
+
+## Browser OCR latency and WASM deployment hotfix — 2026-08-14
+
+### Root cause confirmed
+
+- DevTools showed `WebAssembly.instantiate(): expected magic word ... found
+  3c 21 44 4f`. The latter is the beginning of HTML (`<!DOCTYPE`), so the
+  browser was receiving an error/fallback HTML document at the OpenCV WASM URL,
+  not a slow valid WebAssembly binary.
+- The old browser pipeline performed a sequential layout OCR pass, then a
+  baseline pass, then optional column/recovery passes. For an 11-page scan this
+  could reach roughly 33--55 Tesseract recognitions, with only one browser OCR
+  worker on many devices.
+
+### Changes implemented
+
+- Added build-time validation for all six OCR assets, including both WASM
+  binaries, and production Docker builds now fail if an asset is missing,
+  empty, or has an invalid WASM header.
+- Added browser startup validation for Tesseract and OpenCV WASM. It checks the
+  response status, rejects HTML, and validates the binary magic before PDF
+  rendering. OpenCV `locateFile` is explicit, so it cannot silently resolve to
+  the application route fallback.
+- OpenCV initialization now fails fast after 1.2 seconds and uses the existing
+  deterministic projection fallback; it no longer leaves the user waiting for
+  the previous 8-second timeout.
+- Bounded page-level OCR concurrency at one or two workers based on CPU,
+  mobile/desktop and memory hints. It does not create unbounded workers or
+  increase server/database load.
+- Layout OCR is bounded and pages are processed concurrently where safe. Page
+  checkpoints remain ordered and durable. Recovery and column splitting remain
+  accuracy guarded by the existing golden tests.
+- Removed unnecessary TSV serialization, cached repeated Tesseract parameters,
+  transferred the first raster buffer instead of copying it, and avoided a
+  full IndexedDB quota scan on every page checkpoint.
+
+### Verification
+
+On the same developer Chromium environment and fixtures:
+
+| Fixture | Before this hotfix | After bounded OCR changes | Correctness |
+|---|---:|---:|---|
+| Listening | about 2m24s--2m30s | about 1m30s--1m36s | 100/100 questions and options |
+| Reading | about 2m20s--2m30s | about 1m30s--1m36s | 100/100 questions and options |
+
+These are local Chromium regression timings, not a production capacity
+certificate. A real 4-core/8-GiB and 8-core/16-GiB device matrix is still
+required before publishing an end-user latency SLA. The optimization does not
+change scoring, answer persistence, or server-side exam behavior.

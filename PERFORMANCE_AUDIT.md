@@ -1,5 +1,125 @@
 # Báo cáo audit hiệu năng và độ tin cậy
 
+## Current architecture after server OCR rollback (2026-08-14)
+
+- Web `POST /api/extractions` uploads PDF/audio and returns a durable job id.
+- Celery queue `ocr` runs the existing layout-aware pipeline with Tesseract
+  `eng`, Poppler, OpenCV headless, `OCR_PAGE_WORKERS=2` and an engine pool of 2.
+- Browser polls job progress and opens server review data. Old `clientDraft`
+  records remain readable but are no longer produced by the new upload form.
+- Pipeline 3.6 performs repeated-watermark OCR filtering, number/header-anchored
+  recovery and bounded crop retries. Source page JPEGs are never modified.
+- Verified fixtures: LC5 11 pages/100 questions in 37.1s; RC5 28 pages/100
+  questions in 85.3s. LC5 Part 3/4 is 69/69; RC5 options are 100/100,
+  including the corrected Part 6 layout for 144–146.
+
+The browser-only OCR audit below is historical context from the interrupted
+client-OCR experiment. It is not the production architecture after this
+rollback.
+
+## Historical browser OCR audit and DB hot path (2026-08-14)
+
+> Đây là baseline bắt buộc trước khi triển khai. Các mục trong phần này mô tả
+> trạng thái repository tại thời điểm audit, không phải tuyên bố đã rollout.
+
+### Kiến trúc và baseline hiện tại
+
+- Ứng dụng dùng Next.js 16/React 19 ở frontend, FastAPI/SQLAlchemy ở backend,
+  PostgreSQL cho dữ liệu, MinIO cho object, Redis/Celery cho job và có bản
+  desktop Tauri. Không có `.codegraph/`, vì vậy audit được thực hiện trực tiếp
+  trên routes, models, migrations, query layer, Docker/Nginx và tests.
+- Luồng tạo đề trước thay đổi upload PDF vào `POST /api/extractions`, backend
+  render/OCR trong FastAPI/Celery rồi frontend poll job mỗi
+  1,2 giây. Ảnh answer key và PDF lời giải scan cũng có thể gọi OCR server.
+- Review/crop đang tải ảnh trang do server render; job progress liên tục đọc và
+  ghi bảng `jobs`. MinIO `stat/copy` còn xuất hiện bên trong transaction tạo
+  exam/version.
+- Trước khi sửa mã, frontend test pass **75/75**, lint pass, production build
+  pass và route `/quiz` có JavaScript gzip **219,3 KiB** trên ngân sách 250 KiB.
+  Đây là baseline để ngăn OCR bundle lọt vào màn hình làm bài.
+- Full LC có baseline OCR local đạt 100/100 câu; dịch vụ OCR ngoài không ổn
+  định về layout/geometry và chậm hơn. Hai fixture
+  `TEST 1 LC.pdf`, `TEST 1 RC .pdf` sẽ được dùng làm nguồn golden corpus, nhưng
+  mọi số accuracy mới chỉ được công bố sau khi có ground truth được kiểm tay.
+
+### Findings và hướng xử lý
+
+| ID | Mức độ | Phát hiện/nguyên nhân | Cách sửa | Expected impact |
+|---|---|---|---|---|
+| BOCR-C-01 | CRITICAL | OCR remote đưa tài liệu ra dịch vụ ngoài nhưng không cung cấp geometry đáng tin cậy; cấu hình, secret và fallback làm runtime khó kiểm soát. | Xóa toàn bộ provider/config/secret/benchmark OCR remote; Tesseract.js self-host là engine duy nhất và chạy trong browser/desktop WebView. | Không còn chi phí, privacy risk và phụ thuộc OCR remote. |
+| BOCR-C-02 | CRITICAL | PDF đề, answer key và solution scan đều có đường gọi OCR server; nhiều Teacher có thể tạo request storm CPU/RAM/API. | Chuyển đủ ba luồng sang local OCR, checkpoint IndexedDB/OPFS; server chỉ cấp upload policy, validate manifest và persist. Không có fallback OCR server. | OCR scale theo thiết bị người tạo đề, không theo 8 CPU của server. |
+| BOCR-H-03 | HIGH | Pipeline chính chưa có de-watermark hình học; regex legacy có thể xóa nhầm `TEST`, `PART`, `Directions` hoặc header hợp lệ. | Phát hiện lặp đa trang bằng bbox/IoU, vùng 12% header/footer, page sequence và mask watermark bảo vệ edge chữ; luôn giữ pass ảnh gốc và chỉ merge evidence tin cậy. | Giảm silent omission, không xóa chữ thật bị watermark đè. |
+| BOCR-H-04 | HIGH | Review/crop phụ thuộc page JPEG và API recrop do server tạo. | PDF.js render/crop WebP tại browser; server lưu source và asset cuối theo immutable key. | Bỏ CPU, disk tạm và round trip crop trên server. |
+| BOCR-H-05 | HIGH (OPEN) | Luồng edit session cũ của đề đã tồn tại vẫn còn compatibility clone job/page; chưa được nối vào local manifest/source URL mới. | Cần migrate UI edit sang tải source ký local, tái sử dụng manifest hiện tại và commit copy-on-write; giữ endpoint cũ 410 sau pilot. | Không còn server render/copy khi chỉnh đề cũ; gate này chưa đóng trong release hiện tại. |
+| DB-H-01 | HIGH | `jobs` là nhóm query nổi bật do polling/progress OCR. | Client extraction session không lưu tiến độ từng trang; progress/draft hoàn toàn local, server chỉ theo dõi upload/commit/media. | Giảm read/write liên tục và Redis/Celery traffic. |
+| DB-H-02 | HIGH | `_snapshot_exam`/persist exam gọi MinIO và materialize asset trong transaction; insert stimulus còn `flush()` theo item. | `stat`/validation/materialization trước transaction, immutable object key, pre-generate UUID và Core bulk insert. | Transaction ngắn, statement count bounded, giảm lock/connection hold time. |
+| DB-M-03 | MEDIUM | Autosave delta tối đa 50 câu vẫn đọc projection 100--200 câu để validate. | Chỉ select `question_number` thuộc delta/part; projection đáp án đúng chỉ đọc khi submit/timeout. | Giảm row read và serialization trên hot path 200 học viên. |
+| DB-M-04 | MEDIUM | History dùng `OFFSET`, student start lookup lặp, token list/export query owner/device theo từng dòng. | Cursor `(submitted_at,id)`, một session cho start attempt, batch owner/device aggregate. | Query count cố định và latency ổn định khi dữ liệu tăng. |
+
+### Kiến trúc đích đã khóa
+
+```text
+Browser/Tauri
+  PDF.js text layer + page render
+  -> OpenCV.js preprocessing/layout masks
+  -> Tesseract.js Web Worker (1 worker, tối đa 2 nếu >= 8 logical cores)
+  -> TypeScript parser + local review/crops
+  -> OPFS/IndexedDB checkpoint theo source hash + pipeline version
+  -> direct presigned upload tới MinIO khi người dùng bấm lưu
+  -> ClientExtractionManifestV1 commit vào FastAPI/PostgreSQL
+
+Student /quiz
+  -> không import PDF.js, OpenCV.js hoặc Tesseract.js
+  -> giữ nguyên delta autosave + idempotent submit
+```
+
+- PDF tối đa 50 MiB/500 trang; canvas tối đa 24 MP; mỗi worker chỉ giữ một
+  trang. Runtime OCR được lazy-load và model `eng` được self-host/cache, không
+  tải CDN.
+- Text layer hợp lệ được parse trước; trang scan dùng baseline grayscale 225
+  DPI, Listening/ROI nhỏ tối đa 300 DPI. Recovery chỉ chạy khi coverage hoặc
+  confidence không đạt và mọi bất đồng phải thành review issue.
+- Manifest giới hạn 200 câu, 200 stimulus, 300 asset và 5 MiB; server kiểm tra
+  links, bbox, option, duplicate, unresolved issue và idempotency hash trước
+  persist. Không gửi page image/OCR text tới endpoint xử lý OCR.
+- Giữ 4 Uvicorn worker, pool `5 + 1` mỗi worker và PostgreSQL
+  `max_connections=80`; chưa có bằng chứng cần PgBouncer, Redis cache mới,
+  microservice hoặc thêm index tìm kiếm.
+
+### Phần giữ nguyên vì đang bảo vệ tính toàn vẹn
+
+- PostgreSQL/MinIO, immutable `ExamVersion`, unique answer
+  `(attempt_id, question_number)`, batch sync ledger, row lock khi submit và
+  scoring projection deterministic.
+- Delta autosave/retry/multi-tab recovery trên trang làm bài, audio Range và
+  object metadata trong PostgreSQL. Thay đổi OCR không được chạm vào behavior
+  tính điểm hay làm mất đáp án.
+- Redis/Celery chỉ còn phù hợp cho media/document deterministic như FFmpeg và
+  LibreOffice; không thêm worker OCR hoặc tăng concurrency để che bottleneck.
+
+### Release gates
+
+- Golden LC/RC đủ 100/100 câu tương ứng; watermark corpus đạt ít nhất 98% word
+  recall chuẩn hóa, 100% question/option anchor recall và mọi thiếu hụt hiện
+  thành issue thay vì silent omission.
+- `/quiz` vẫn không vượt 250 KiB gzip. Trong lúc OCR không có polling và không
+  gửi page/answer-key image lên server.
+- Commit không thực hiện MinIO I/O trong DB transaction; autosave/history/token
+  list đạt query budget cố định đã nêu trong kế hoạch.
+- Capacity chỉ được báo cáo sau k6 50/100/150/200, autosave spike, submit peak,
+  audio Range, mixed workload và client-extraction commit trên staging.
+
+### Golden verification after implementation (2026-08-14)
+
+- Playwright Chromium regression trên đúng hai fixture trong repository đã PASS:
+  LC đủ dãy 1--100 và RC đủ dãy 101--200, không còn issue
+  `question_missing`/`options_missing`. Đây là kiểm tra anchor/coverage, chưa
+  phải chứng nhận normalized word recall cho mọi watermark.
+- Thời gian chạy một lần trên máy phát triển là khoảng 2,3--2,5 phút mỗi
+  fixture. Đây không phải warm-cache benchmark của máy 4-core/8 GiB hoặc
+  8-core/16 GiB; gate latency/peak-memory vẫn để pending trong
+  `LOAD_TEST.md`.
+
 ## Audit sự cố OCR LC/RC và phạm vi Kho đề theo Teacher (2026-08-13)
 
 Phần này được hoàn thành trước khi sửa mã cho yêu cầu hiện tại. Phạm vi kiểm
@@ -1966,7 +2086,7 @@ và các API quản trị trả 401, khiến giao diện quay lại trang login.
 | ID | Mức độ | Phát hiện | Nguyên nhân | Cách sửa | Expected impact |
 | --- | --- | --- | --- | --- | --- |
 | DESK-BUILD-H-07 | HIGH | Release Windows có cờ `EnableNvidiaGpu`/`GPU_OCR_ENABLED=false` trái với artifact thực | Script luôn cài `onnxruntime-directml`, tham số NVIDIA không được dùng; smoke chỉ chấp nhận mọi local provider | Bỏ contract gây hiểu nhầm, công bố provider policy và bắt native smoke xác nhận DirectML/CoreML/CPU đúng target | Release không thể âm thầm rơi về CPU do thiếu DLL/provider |
-| DESK-OCR-H-08 | HIGH | Người dùng không có cách ép provider an toàn để chẩn đoán; GPU NVIDIA laptop có thể không phải adapter mặc định | Policy chỉ hard-code theo OS; DirectML dùng adapter mặc định, chưa có override cấu hình | Thêm `OCR_PROVIDER=auto/cpu/dml/coreml/cuda`, validate provider khả dụng, CPU fallback rõ ràng và diagnostics | Hệ thống tự ưu tiên GPU theo artifact, đồng thời hỗ trợ vận hành/debug có kiểm soát |
+| DESK-OCR-H-08 | HIGH | Sidecar native cũ có runtime khác nhau theo hệ điều hành | Policy native làm kết quả khó đồng nhất giữa web và desktop | Chuyển Tauri mới sang cùng pipeline Tesseract.js/WebAssembly của browser; chỉ giữ sidecar cũ trong cửa sổ tương thích | Một pipeline và một golden corpus cho web/Tauri |
 | DESK-MAC-H-09 | HIGH | Intel Mac vẫn chậm; bật CoreML cho mọi Mac có thể làm OCR sai khác | Fixture/native regression trước đây cho thấy Intel CoreML drift; Apple Silicon mới là target CoreML ổn định | Giữ Intel CPU để bảo toàn dữ liệu, tối ưu pool/thread; Apple Silicon dùng CoreML cache + `MLProgram`/`FastPrediction`; native CI assert kiến trúc/provider | M-series tận dụng CPU/GPU/Neural Engine; Intel có bounded parallel CPU thay vì đổi provider mù quáng |
 | SYNC-C-01 | CRITICAL | Xóa/sửa bản web có thể để cache Desktop cũ xuất hiện lại và upload đè | Chỉ có push Desktop -> web, không có reconcile tombstone/revision từ server | Thêm reconcile theo mapping `DesktopSync`; cache sạch nhưng stale/deleted được quarantine, cache đang pending được đánh dấu conflict và không tự upload | Không hồi sinh đề đã xóa và không ghi đè thay đổi web trong im lặng |
 | SYNC-C-02 | CRITICAL | Upload Desktop không gửi base revision | Manifest chỉ có hash local; server update exam đã tồn tại mà không kiểm tra optimistic concurrency | Lưu `remote_revision`, gửi `base_revision`, kiểm tra ở create lẫn complete transaction và trả 409 khi xung đột | Edit hai phía không gây lost update; revision PostgreSQL là nguồn sự thật |
@@ -2179,3 +2299,133 @@ Tesseract.
   0 guide objects.
 - Kiểm tra tất cả durable bucket/object references trong PostgreSQL không còn
   namespace cũ và không có reference nào trỏ tới object bị thiếu.
+
+## Audit incident OCR trình duyệt chậm và lỗi WASM (2026-08-14)
+
+### Phạm vi và bằng chứng
+
+Audit này tập trung vào hiện tượng file Listening khoảng 11 trang chạy hơn 5
+phút trên Chrome/Windows. Đường xử lý thực tế là client-side, không đi qua
+FastAPI để nhận dạng:
+
+```text
+Browser
+  -> PDF.js đọc PDF và render canvas
+  -> preprocess.worker.js (grayscale; OpenCV.js chỉ ở recovery)
+  -> Tesseract.js Web Worker + eng.traineddata
+  -> parser TypeScript + checkpoint IndexedDB/OPFS
+```
+
+Bằng chứng từ DevTools trong incident:
+
+- `opencv.js` báo `wasm streaming compile failed` và sau đó
+  `WebAssembly.instantiate(): expected magic word 00 61 73 6d, found 3c 21 44 4f`.
+- `00 61 73 6d` là magic hợp lệ của WebAssembly; `3c 21 44 4f` là đầu của
+  nội dung HTML (`<!DO...`). Vì vậy ít nhất một request `.wasm` đang nhận
+  trang lỗi/fallback HTML thay vì binary WASM. Đây là lỗi artifact/deployment
+  hoặc proxy route, không phải do ảnh OCR khó.
+- Artifact trong repository hiện có magic đúng và kích thước hợp lý:
+  `opencv_js.wasm` khoảng 3.0 MiB và
+  `tesseract-core-simd-lstm.wasm` khoảng 2.7 MiB. Local Next runtime đã trả
+  cả hai với `Content-Type: application/wasm` và HTTP 200; production domain
+  không phản hồi được trong phiên audit nên cần kiểm tra trực tiếp sau deploy.
+- Tesseract.js core được pin ở
+  `frontend/lib/client-ocr/tesseract-runtime.ts:49-58`, nhưng OpenCV loader
+  vẫn tự tìm `opencv_js.wasm` tương đối với `opencv.js`. Chỉ cần một file bị
+  thiếu trong image frontend, bị SPA fallback hoặc trả sai MIME là recovery
+  sẽ log lỗi và chờ fallback.
+
+### Luồng hiện tại gây khuếch đại thời gian
+
+`frontend/lib/client-ocr/runtime.ts` đang thực hiện hai pass trên toàn bộ PDF:
+
+1. Pass layout tại dòng 525: mọi trang scan được render 120 DPI và OCR PSM 11
+   để tìm cột/số câu.
+2. Pass OCR chính tại dòng 552: mỗi trang lại render 225 DPI, copy toàn bộ
+   `ImageData`, preprocess rồi OCR lần nữa.
+3. Nếu layout có hai cột, dòng 221--248 tách thành hai canvas và nhận dạng cả
+   hai vùng. Với thiết bị chỉ có một worker, `Promise.all` không tạo song song
+   thật vì pool xếp hai job vào cùng một worker.
+4. Nếu confidence/anchor/options chưa đạt, dòng 580--600 chạy recovery PSM 11
+   thêm một lượt; recovery hai cột tiếp tục thành hai lần OCR.
+
+Do đó 11 trang scan thường không phải 11 lần OCR mà có thể là:
+
+```text
+11 locator + (11 x 2 baseline) + (11 x 2 recovery khi cần) = tối đa 55 lượt
+```
+
+Trên máy dưới 8 logical cores, `clientOcrWorkerCount()` tại
+`frontend/lib/client-ocr/capabilities.ts:58-60` chỉ tạo một worker, nên các
+lượt đó chạy nối tiếp. Ngoài inference còn có chi phí khởi tạo model, render
+PDF, chuyển `ImageData` giữa main thread/preprocess worker/Tesseract worker và
+serialize blocks/TSV.
+
+### Findings
+
+| ID | Mức độ | Phát hiện/nguyên nhân | Cách sửa bắt buộc | Expected impact |
+|---|---|---|---|---|
+| OCR-ASSET-C-01 | CRITICAL | `.wasm` có thể bị trả HTML; OpenCV recovery không khởi tạo đúng và log lỗi gây chờ/fallback không minh bạch. | Thêm preflight kiểm tra HTTP status, MIME và 8-byte WASM magic cho OpenCV/Tesseract; build/deploy smoke phải kiểm tra mọi asset dưới `/ocr/**`; cấu hình `locateFile` OpenCV tuyệt đối, không phụ thuộc current script. | Fail-fast trong vài trăm ms với thông báo deploy rõ ràng; khi asset đúng, bỏ lỗi compile và giảm thời gian cold start/recovery. |
+| OCR-PERF-C-02 | CRITICAL | Hai pass OCR toàn tài liệu, cộng split hai cột và recovery, tạo 33--55 recognition jobs cho file 11 trang. | Đổi sang một baseline pass 180--225 DPI; dùng kết quả baseline để phát hiện cột/anchor; chỉ OCR split hoặc recovery theo trang có issue, không chạy locator pass riêng toàn bộ PDF. Giữ baseline evidence để không đổi accuracy âm thầm. | Giảm số lượt OCR hot path khoảng 2--4 lần; mục tiêu file 11 trang còn dưới 60--90 giây trên máy 4-core/8 GiB sau benchmark. |
+| OCR-PERF-H-03 | HIGH | Device dưới 8 logical cores chỉ có một worker; hai cột chạy nối tiếp. Chọn worker chỉ theo core, chưa tính RAM/thermal/battery. | Chọn concurrency theo `hardwareConcurrency` + `deviceMemory` + mobile/battery; desktop 8+ cores có thể dùng 2 worker, máy yếu 1 worker; không vượt trần 2. Warm một pool dùng chung thay vì khởi tạo lại theo chức năng. | Máy đủ tài nguyên tận dụng CPU; máy yếu không bị swap/thermal throttle. |
+| OCR-PERF-H-04 | HIGH | Trang A4 225 DPI tạo khoảng 5 MP và nhiều bản copy RGBA; Tesseract trả `text`, `blocks`, `tsv` dù parser chỉ dùng lines/words. | Benchmark giảm 180/200 DPI theo corpus; bỏ output `tsv` nếu không cần; tái sử dụng buffer/canvas và giải phóng ngay sau mỗi page; giữ recovery độ phân giải cao chỉ khi evidence thiếu. | Giảm CPU, copy/GC và memory peak; không giảm accuracy nếu golden gate giữ nguyên. |
+| OCR-PERF-H-05 | HIGH | Mỗi page gọi `putClientOcrDraft`; quota enforcement lại list toàn bộ draft/blob và structured-clone toàn bộ `pages` đang tăng dần (`local-drafts.ts:84-89,149-160`). | Checkpoint page phải bounded: quota kiểm tra khi tạo/ghi blob, progress metadata nhẹ; ghi page delta/transaction một lần, hoặc debounce checkpoint tối đa 1 lần/1--2 trang nhưng flush trước unload/cancel. | Giảm IndexedDB serialization/GC và thời gian phụ tăng theo số trang, vẫn resume được sau refresh. |
+| OCR-PERF-M-06 | MEDIUM | `setParameters` chạy trước mỗi recognition và output blocks/TSV được serialize lại cho từng vùng. | Cache parameters theo worker/PSM/whitelist; chỉ yêu cầu output cần cho parser; đo riêng render, preprocess, init, recognition, checkpoint. | Giảm round-trip worker và giúp xác định đúng bottleneck trên thiết bị thật. |
+| OCR-DEPLOY-H-07 | HIGH | Không có contract kiểm tra URL asset sau khi build image; local artifact đúng không chứng minh image production đúng. | CI chạy `file`, magic-byte, MIME; sau rollout dùng `curl`/smoke browser kiểm tra `.wasm`, `.js`, traineddata, PDF worker và cache header. Không dùng SPA fallback cho `/ocr/**`. | Chặn release gây đúng incident `found 3c 21 44 4f`; cache immutable chỉ áp dụng sau khi checksum đúng. |
+| OCR-UX-M-08 | MEDIUM | UI chỉ hiển thị progress OCR tổng; chưa cho biết đang render/preprocess/model/recognize/checkpoint và không cảnh báo máy yếu. | Thêm telemetry local không chứa PDF/text: duration từng stage, pages, worker count, memory nếu có; hiển thị “đang khởi tạo OCR” và khuyến nghị Chrome desktop/cắm sạc khi cần. | Người dùng phân biệt được cold start, asset lỗi và inference chậm; dữ liệu đủ để tune theo device matrix. |
+
+### Phần không cần sửa
+
+- Không đưa PDF/OCR lên FastAPI chỉ để làm nhanh hơn cho một người; đó sẽ biến
+  200 người tạo đề thành CPU/request storm trên server 8 core.
+- Không thêm Redis, Kafka, Kubernetes, GPU server hoặc microservice cho OCR ở
+  workload hiện tại. Server PostgreSQL/MinIO/Redis không nằm trên đường OCR
+  trước commit và không phải nguyên nhân của 5 phút trong screenshot.
+- Không bỏ checkpoint, parser evidence, recovery hoặc unique/idempotent data
+  contract nếu chưa có golden test chứng minh tương đương. Tốc độ không được
+  đánh đổi đáp án/câu hỏi bị mất.
+- Không tăng worker vô hạn. Hai Tesseract WASM worker đã có thể nhân RAM model
+  và làm máy 4-core chậm hơn do contention; concurrency phải bounded và đo
+  trên thiết bị thật.
+
+### Kế hoạch triển khai sau audit
+
+1. **P0 — Deployment correctness:** sửa/check asset OpenCV/Tesseract, preflight
+   fail-fast và cache/MIME contract; kiểm tra production URL sau recreate image.
+2. **P1 — Reduce OCR passes:** bỏ locator OCR toàn tài liệu, giữ một baseline
+   pass và chỉ fallback per-page; chạy LC/RC golden để xác nhận không giảm
+   question/option anchor recall.
+3. **P1 — Reduce transfer/serialization:** bỏ TSV thừa, cache parameters,
+   giảm copy RGBA, bounded IndexedDB checkpoint và stage timings.
+4. **P2 — Adaptive device policy:** concurrency 1/2 theo core+memory+mobile,
+   warm model, không chạy OCR khi browser đang ở background nếu không cần.
+5. **P2 — Device benchmark:** Chromium matrix 4-core/8 GiB và 8-core/16 GiB,
+   cold-cache/warm-cache, 11/13/28 trang; ghi p50/p95, peak memory, asset
+   errors và accuracy vào `LOAD_TEST.md`.
+
+### Verification baseline
+
+- `npm run lint`: PASS.
+- `npm test`: PASS, 22 test files / 86 tests.
+- `npm run check:quiz-budget`: PASS, `/quiz` 219.5 KiB gzip / 250 KiB.
+- `python3 -m compileall -q backend`: PASS.
+- Local Next asset smoke: `.wasm` trả HTTP 200, `Content-Type:
+  application/wasm`, magic `00 61 73 6d`; production asset smoke chưa lấy được
+  vì domain timeout trong phiên audit và phải chạy lại trên server/deploy thật.
+- Golden Playwright trước đó trong repository PASS coverage/anchors; wall time
+  dev machine khoảng 2.3--2.5 phút cho mỗi fixture, chưa phải chứng nhận cho
+  file 11 trang trên end-user. `LOAD_TEST.md` vẫn phải giữ trạng thái pending
+  cho device matrix.
+
+### Follow-up sau audit — 2026-08-14
+
+- P0/P1 đã triển khai: preflight WASM OpenCV/Tesseract, build asset gate,
+  `locateFile` tuyệt đối, OpenCV timeout 1,2 giây, bounded OCR 1--2 worker,
+  giảm serialization/copy và checkpoint quota scan.
+- Golden Reading và Listening sau thay đổi đều PASS 100/100 question/option
+  anchors. Cùng môi trường Chromium, wall time giảm còn khoảng 1m30s--1m36s
+  mỗi fixture. Đây là regression benchmark trên máy phát triển, chưa phải
+  SLA cho thiết bị end-user.
+- `npm run lint`, `npm test` (22 file/86 test), `npm run check:ocr-assets` và
+  `npm run build` đều PASS. Device matrix 4-core/8 GiB, 8-core/16 GiB và
+  production asset smoke vẫn là bước bắt buộc trước khi công bố p95.

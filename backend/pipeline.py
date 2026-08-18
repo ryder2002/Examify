@@ -59,8 +59,8 @@ ProgressCallback = Callable[[int, str], None]
 # The OCR worker runs one document at a time.  Up to six page pipelines can
 # therefore use the six-core worker quota without multiplying concurrent PDF
 # jobs and starving the API/database containers.
-MAX_PAGE_WORKERS = 6
-DEFAULT_PAGE_WORKERS = max(2, min(MAX_PAGE_WORKERS, (os.cpu_count() or 4) // 2))
+MAX_PAGE_WORKERS = 8
+DEFAULT_PAGE_WORKERS = max(2, min(MAX_PAGE_WORKERS, (os.cpu_count() or 4)))
 
 
 def _page_workers(page_count: int) -> int:
@@ -563,9 +563,9 @@ def _paddle_page_result(
     # baseline varies by a few pixels (e.g. `are` after `They`), losing words
     # or punctuation on short answer choices. Bound it by glyph height too.
     same_row_tolerance = max(
-        6.0,
-        page_height * coordinate_scale * 0.004,
-        median_word_height * 0.35,
+        7.0,
+        page_height * coordinate_scale * 0.006,
+        median_word_height * 0.60,
     )
 
     for items in columns:
@@ -606,6 +606,154 @@ def _paddle_page_result(
         sorted(tokens, key=lambda token: (token.top, token.left)),
         sum(confidences) / len(confidences) if confidences else 0.0,
     )
+
+
+_WATERMARK_STRUCTURAL_TEXT = {
+    "directions",
+    "questions",
+    "part",
+    "listening",
+    "reading",
+    "test",
+    "example",
+    "continue",
+}
+
+
+def _watermark_key(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "", str(value).casefold())
+
+
+def _watermark_row_candidates(page: PageResult) -> list[tuple[str, list[OCRToken], float]]:
+    """Group OCR tokens into rows for conservative repeated-text filtering."""
+    by_column: dict[int, list[OCRToken]] = {0: [], 1: []}
+    for token in page.tokens:
+        # In the lower two-column answer grid, a printed question number can
+        # sit just left of the physical centre while its A-D text is on the
+        # right (RC5 questions 145/146 are a concrete example). Treat the
+        # centre gutter as belonging to the right block instead of attaching
+        # those numbers to the left column.
+        token_center = token.left + token.width / 2
+        column = 0 if token_center < page.width * 0.45 else 1
+        by_column[column].append(token)
+    rows: list[tuple[str, list[OCRToken], float]] = []
+    for tokens in by_column.values():
+        ordered: list[list[OCRToken]] = []
+        heights = sorted(token.height for token in tokens)
+        median_height = heights[len(heights) // 2] if heights else 0
+        tolerance = max(6, round(median_height * 0.65))
+        for token in sorted(tokens, key=lambda item: (item.top, item.left)):
+            row = next(
+                (
+                    current
+                    for current in reversed(ordered)
+                    if abs(token.top - min(item.top for item in current)) <= tolerance
+                    and max(token.top, min(item.top for item in current))
+                    < min(
+                        token.top + token.height,
+                        max(item.top + item.height for item in current),
+                    )
+                ),
+                None,
+            )
+            if row is None:
+                ordered.append([token])
+            else:
+                row.append(token)
+        for row in ordered:
+            row.sort(key=lambda item: item.left)
+            text = " ".join(item.text for item in row).strip()
+            key = _watermark_key(text)
+            if key:
+                rows.append((key, row, min(item.top for item in row) / max(1, page.height)))
+    return rows
+
+
+def _filter_repeated_watermarks(
+    pages: list[PageResult],
+) -> tuple[list[PageResult], list[str]]:
+    """Remove only repeated central OCR noise, never pixels from source pages.
+
+    A real question is unlikely to repeat verbatim at the same page-relative
+    position across many pages. Watermarks do. Requiring both conditions and
+    excluding structural words keeps this filter from deleting legitimate
+    headers or a repeated answer choice. The original page JPEGs remain
+    untouched for crop/review.
+    """
+    if len(pages) < 3:
+        return pages, []
+    occurrences: dict[tuple[str, int], set[int]] = {}
+    samples: dict[str, str] = {}
+    for page in pages:
+        seen_on_page: set[tuple[str, int]] = set()
+        for key, tokens, relative_top in _watermark_row_candidates(page):
+            raw = " ".join(token.text for token in tokens).strip()
+            letters = re.findall(r"[a-z]", key)
+            if len(key) < 8 or len(letters) < 4:
+                continue
+            if key in _WATERMARK_STRUCTURAL_TEXT:
+                continue
+            # Central repeated text is the watermark signature. Page headers
+            # and footers are intentionally outside this band.
+            if not 0.10 <= relative_top <= 0.88:
+                continue
+            bucket = (key, round(relative_top * 10))
+            seen_on_page.add(bucket)
+            samples.setdefault(key, raw)
+        for bucket in seen_on_page:
+            occurrences.setdefault(bucket, set()).add(page.number)
+
+    page_threshold = max(2, math.ceil(len(pages) * 0.35))
+    repeated = {
+        key: page_numbers
+        for (key, _bucket), page_numbers in occurrences.items()
+        if len(page_numbers) >= page_threshold
+    }
+    if not repeated:
+        return pages, []
+    filtered_count = 0
+    filtered_pages: list[PageResult] = []
+    for page in pages:
+        kept_tokens: list[OCRToken] = []
+        removed_keys: set[str] = set()
+        for key, tokens, relative_top in _watermark_row_candidates(page):
+            bucket = (key, round(relative_top * 10))
+            if key in repeated and page.number in repeated[key]:
+                removed_keys.add(key)
+                filtered_count += 1
+                continue
+            kept_tokens.extend(tokens)
+        # Rows not represented in the helper are not discarded. This should
+        # only happen for an empty token stream and is safer than guessing.
+        if page.tokens:
+            kept_ids = {id(token) for token in kept_tokens}
+            kept_tokens = [token for token in page.tokens if id(token) in kept_ids]
+        columns: list[str] = []
+        for column in page.columns:
+            lines: list[str] = []
+            for line in column.splitlines():
+                line_key = _watermark_key(line)
+                if line_key in removed_keys:
+                    continue
+                lines.append(line)
+            columns.append("\n".join(lines))
+        filtered_pages.append(
+            PageResult(
+                page.number,
+                page.width,
+                page.height,
+                columns,
+                kept_tokens,
+                page.confidence,
+            )
+        )
+    logger.info(
+        "[OCR_WATERMARK] pages=%s candidates=%s removed_rows=%s",
+        len(pages),
+        sorted(samples[key] for key in repeated),
+        filtered_count,
+    )
+    return filtered_pages, sorted(samples[key] for key in repeated)
 
 
 def _ocr_page_image(
@@ -1465,7 +1613,7 @@ def _resolve_sequence(
             # A partial option block without matching numbered neighbours is
             # not enough evidence to invent its question number.
             continue
-        elif exam_type == "reading" and number != expected:
+        elif (exam_type == "reading" or exam_type == "listening") and number != expected:
             repaired: int | None = None
             # Scans frequently turn the leading "1" into 4/7 (172→472) or
             # lose the first digits entirely (184→4, 185→35). Page/column
@@ -1599,7 +1747,10 @@ def _to_questions(
             item = dict(item)
             item["text"] = normalize_part5_question_text(str(item.get("text", "")))
         letters = _option_letters(exam_type, number)
-        item_issues = list(item["issues"])
+        # A question can be seen once in the primary pass and again in a
+        # bounded recovery pass. Preserve issue meaning but never render the
+        # same warning twice in the review payload.
+        item_issues = list(dict.fromkeys(item["issues"]))
         # Part 6 questions are blanks inside the retained passage image.  They
         # intentionally have no standalone question sentence; only their
         # answer choices are OCR content.  Part 5/7 and Listening Parts 3/4
@@ -1966,7 +2117,7 @@ def _reading_headers_with_layout_fallback(
         for run in consecutive_runs(by_page[page_number]):
             start, end = run[0], run[-1]
             if any(
-                header.start <= start <= end <= header.end
+                not (end < header.start or start > header.end)
                 for header in headers
             ):
                 continue
@@ -2758,7 +2909,10 @@ def _needs_scan_recovery(item: dict[str, Any], exam_type: str) -> bool:
     ):
         return True
     expected_options = _option_letters(exam_type, number)
-    return any(letter not in item.get("options", {}) for letter in expected_options)
+    return any(
+        not str((item.get("options") or {}).get(letter) or "").strip()
+        for letter in expected_options
+    )
 
 
 def _needs_sentence_punctuation_recovery(item: dict[str, Any]) -> bool:
@@ -2846,7 +3000,11 @@ def _option_marker_question_block_rois(
     for token in page.tokens:
         if token.top < marker_top_floor:
             continue
-        column = 0 if token.left + token.width / 2 < page.width / 2 else 1
+        token_center = token.left + token.width / 2
+        # A question number printed in the centre gutter may be a few pixels
+        # left of the page midpoint while its choices are in the right block.
+        # This occurs in the RC5 Part 6 grid (145/146).
+        column = 0 if token_center < page.width * 0.45 else 1
         if _option_marker_token(token, "A"):
             a_markers.append((column, token))
         if _option_marker_token(token, "D"):
@@ -2895,7 +3053,16 @@ def _option_marker_question_block_rois(
                 0.98,
                 (marker_a.top + marker_a.height) / page.height + 0.008,
             )
-            left, right = ((0.045, 0.525) if column == 0 else (0.49, 0.965))
+            # Keep a small part of the gutter so a number such as 145, whose
+            # first digit is printed just left of the midpoint, is not clipped
+            # before Tesseract sees it.
+            left, right = (
+                (0.045, 0.40)
+                if column == 0 and 131 <= number <= 146
+                else (0.045, 0.525)
+                if column == 0
+                else (0.42, 0.965)
+            )
             rois[number] = ReadingROI(
                 (left, top, right, bottom),
                 "scan_question_block_d_anchor",
@@ -2948,7 +3115,17 @@ def _option_marker_question_block_rois(
             continue
         # Exclude photographed page edges and the centre gutter; both create
         # high-contrast curves that can dominate a short OCR crop.
-        left, right = ((0.045, 0.525) if column == 0 else (0.49, 0.965))
+        left, right = (
+            (0.045, 0.40)
+            if column == 0 and any(131 <= number <= 146 for number in numbers)
+            else (0.045, 0.525)
+            if column == 0
+            # Keep the centre gutter for the first digit of a Part 6 number
+            # (145/146 can begin just left of the visual midpoint).
+            else (0.42, 0.965)
+            if any(131 <= number <= 146 for number in numbers)
+            else (0.49, 0.965)
+        )
         rois[number] = ReadingROI(
             (left, top, right, bottom),
             "scan_question_block",
@@ -2984,7 +3161,10 @@ def _number_anchor_question_block_rois(
         number = _normalize_number(raw_number or "")
         if number not in expected:
             continue
-        column = 0 if token.left + token.width / 2 < page.width / 2 else 1
+        token_center = token.left + token.width / 2
+        # A question number printed in the centre gutter can be a few pixels
+        # left of the page midpoint while its choices are in the right block.
+        column = 0 if token_center < page.width * 0.45 else 1
         anchors[number].append((column, token))
 
     # A single number can be page furniture/noise. Part 3/4 pages normally
@@ -3011,15 +3191,38 @@ def _number_anchor_question_block_rois(
         for index, (number, token) in enumerate(ordered):
             next_token = ordered[index + 1][1] if index + 1 < len(ordered) else None
             top = max(0.0, token.top / page.height - 0.012)
-            bottom = (
-                max(top + 0.025, next_token.top / page.height - 0.006)
-                if next_token is not None
-                else 0.965
-            )
+            if next_token is not None:
+                bottom = max(top + 0.025, next_token.top / page.height - 0.006)
+            else:
+                # The final block on a page otherwise absorbs the large pale
+                # watermark/footer area. Anchor the bottom at its D marker
+                # when available, preserving only the question/options block.
+                d_markers = [
+                    candidate
+                    for candidate in page.tokens
+                    if candidate.top >= token.top
+                    and (0 if candidate.left + candidate.width / 2 < page.width * 0.45 else 1)
+                    == column
+                    and _option_marker_token(candidate, "D")
+                ]
+                bottom = (
+                    (min(d_markers, key=lambda candidate: candidate.top).top
+                     + min(d_markers, key=lambda candidate: candidate.top).height)
+                    / page.height
+                    + 0.02
+                    if d_markers
+                    else 0.965
+                )
             bottom = min(0.98, bottom)
             if bottom - top < 0.025:
                 continue
-            left, right = ((0.045, 0.525) if column == 0 else (0.49, 0.965))
+            left, right = (
+                (0.045, 0.40)
+                if column == 0 and 131 <= number <= 146
+                else (0.045, 0.525)
+                if column == 0
+                else (0.42, 0.965)
+            )
             rois[number] = ReadingROI(
                 (left, top, right, bottom),
                 "scan_question_block_number_anchor",
@@ -3039,7 +3242,12 @@ def _question_block_rois(
     marker_rois = _option_marker_question_block_rois(page, numbers)
     # A number anchor is stronger than an A/D estimate for that same question.
     if use_number_anchors:
-        marker_rois.update(_number_anchor_question_block_rois(page, numbers))
+        # Printed blank numbers inside a Part 6 passage are not answer-block
+        # anchors (for example the ``146.`` blank on the left while choices
+        # for 146 are in the right column).  Use number anchors only as a
+        # fallback for blocks whose A/D marker layout could not be mapped.
+        for number, roi in _number_anchor_question_block_rois(page, numbers).items():
+            marker_rois.setdefault(number, roi)
     return marker_rois
 
 
@@ -3051,9 +3259,19 @@ def _recover_page_question_blocks(
     recover_numbers: set[int],
     use_number_anchors: bool = False,
 ) -> list[dict[str, Any]]:
+    roi_numbers = set(int(number) for number in page_numbers)
+    # The retry set contains only incomplete questions.  Expand the layout
+    # anchors to the complete printed Part 6/7 group so two-column A/D markers
+    # can still be paired with their original question numbers.
+    combined = "\n".join(page.columns)
+    for match in READING_GROUP_HEADER.finditer(combined):
+        start = int(match.group("start"))
+        end = int(match.group("end"))
+        if 101 <= start <= 200 and start <= end:
+            roi_numbers.update(range(start, end + 1))
     rois = _question_block_rois(
         page,
-        page_numbers,
+        sorted(roi_numbers),
         use_number_anchors=use_number_anchors,
     )
     selected = [
@@ -3347,14 +3565,89 @@ def _merge_scan_recovery_candidates(
     return result
 
 
+def _listening_gap_targets(
+    parsed: list[dict[str, Any]],
+    page_results: Iterable[PageResult],
+) -> dict[int, set[int]]:
+    """Find one/two missing Part 3–4 numbers between page-local anchors."""
+    observed_by_page: dict[int, set[int]] = {}
+    for item in parsed:
+        number = int(item.get("number", 0))
+        page = int(item.get("page", 0))
+        if 32 <= number <= 100 and page > 0:
+            observed_by_page.setdefault(page, set()).add(number)
+    for page in page_results:
+        numbers = observed_by_page.setdefault(page.number, set())
+        for token in page.tokens:
+            text = token.text.translate(SPATIAL_MARKER_TRANSLATION).strip()
+            match = NUMBER_TOKEN.match(text)
+            raw_number = match.group(1) if match is not None else None
+            if raw_number is None:
+                question_start = QUESTION_START.match(text)
+                raw_number = question_start.group("number") if question_start else None
+            number = _normalize_number(raw_number or "")
+            if number is not None and 32 <= number <= 100:
+                numbers.add(number)
+
+    gaps_by_page: dict[int, set[int]] = {}
+    for page, values in observed_by_page.items():
+        ordered = sorted(values)
+        for left, right in zip(ordered, ordered[1:]):
+            # Part 3/4 blocks are three consecutive questions. A one- or
+            # two-number gap is a safe bounded retry target; wider gaps may
+            # represent page breaks and are deliberately left to review.
+            if 1 < right - left <= 3:
+                gaps_by_page.setdefault(page, set()).update(
+                    range(left + 1, right)
+                )
+    return gaps_by_page
+
+
+def _reading_header_recovery_targets(
+    parsed: list[dict[str, Any]],
+    page_results: Iterable[PageResult],
+) -> dict[int, set[int]]:
+    """Map incomplete Part 6/7 questions back to their printed group page.
+
+    Sequence recovery can attach an unnumbered answer block to the next page.
+    The printed ``Questions 143-146`` header is stronger evidence for a
+    bounded retry than that inferred page assignment.
+    """
+    incomplete = {
+        int(item.get("number", 0))
+        for item in parsed
+        if 101 <= int(item.get("number", 0)) <= 200
+        and _needs_scan_recovery(item, "reading")
+    }
+    targets: dict[int, set[int]] = {}
+    if not incomplete:
+        return targets
+    for page in page_results:
+        combined = "\n".join(page.columns)
+        for match in READING_GROUP_HEADER.finditer(combined):
+            start = int(match.group("start"))
+            end = int(match.group("end"))
+            selected = {number for number in incomplete if start <= number <= end}
+            if selected:
+                targets.setdefault(page.number, set()).update(selected)
+    return targets
+
+
 def _scan_quality_retry_pages(
-    parsed: list[dict[str, Any]], exam_type: str
+    parsed: list[dict[str, Any]],
+    exam_type: str,
+    *,
+    page_results: Iterable[PageResult] | None = None,
 ) -> list[int]:
     """Return a bounded set of pages where OCR lost content, not just numbers."""
     pages: set[int] = set()
     for item in parsed:
         if _needs_scan_recovery(item, exam_type):
             pages.add(int(item["page"]))
+    if exam_type == "listening" and page_results is not None:
+        pages.update(_listening_gap_targets(parsed, page_results))
+    if exam_type == "reading" and page_results is not None:
+        pages.update(_reading_header_recovery_targets(parsed, page_results))
     try:
         cap = int(os.getenv("OCR_SCAN_RETRY_PAGES", "12"))
     except ValueError:
@@ -3678,6 +3971,13 @@ def extract_exam(
             )
             progress(percent, stage)
     page_results.sort(key=lambda page: page.number)
+    page_results, watermark_texts = _filter_repeated_watermarks(page_results)
+    if watermark_texts:
+        logger.info(
+            "[OCR_PIPELINE] job=%s repeated_watermarks=%s",
+            job_id,
+            watermark_texts,
+        )
 
     reading_plans: list[ReadingPagePlan] = []
     reading_roi_results: dict[int, list[PageResult]] = {}
@@ -3711,6 +4011,9 @@ def extract_exam(
         for page_number, page in locator_pages.items():
             page_results[page_number - 1] = page
         page_results.sort(key=lambda page: page.number)
+        page_results, late_watermarks = _filter_repeated_watermarks(page_results)
+        if late_watermarks:
+            watermark_texts = sorted(set(watermark_texts).union(late_watermarks))
         roi_metrics["locator_pages"] = len(locator_pages)
         roi_metrics["locator_seconds"] = round(
             time.perf_counter() - locator_started, 3
@@ -3938,7 +4241,21 @@ def extract_exam(
             if recovery_results:
                 parsed, sequence_issues = _resolve_sequence(candidates, exam_type)
 
-    retry_pages = _scan_quality_retry_pages(parsed, exam_type)
+    gap_targets_by_page = (
+        _listening_gap_targets(parsed, page_results)
+        if exam_type == "listening"
+        else {}
+    )
+    reading_header_targets_by_page = (
+        _reading_header_recovery_targets(parsed, page_results)
+        if exam_type == "reading"
+        else {}
+    )
+    retry_pages = _scan_quality_retry_pages(
+        parsed,
+        exam_type,
+        page_results=page_results,
+    )
     punctuation_recover_numbers: set[int] = set()
     if exam_type == "reading":
         # At most one sentence-punctuation probe per page. Normal missing
@@ -3988,6 +4305,17 @@ def extract_exam(
             parsed_by_page.setdefault(page_number, []).append(number)
             if number in recover_numbers:
                 recover_by_page.setdefault(page_number, set()).add(number)
+        for page_number, numbers in gap_targets_by_page.items():
+            if page_number in retry_pages:
+                # These are only inferred from two printed anchors on the
+                # same page. The full-page retry may accept the number only
+                # when Tesseract independently recognizes it.
+                recover_by_page.setdefault(page_number, set()).update(numbers)
+                parsed_by_page.setdefault(page_number, []).extend(numbers)
+        for page_number, numbers in reading_header_targets_by_page.items():
+            if page_number in retry_pages:
+                recover_by_page.setdefault(page_number, set()).update(numbers)
+                parsed_by_page.setdefault(page_number, []).extend(numbers)
 
         retry_candidates_by_page: dict[int, list[dict[str, Any]]] = {}
         with ThreadPoolExecutor(max_workers=min(workers, len(retry_pages))) as executor:
@@ -4001,7 +4329,10 @@ def extract_exam(
                     # The additional per-number anchor is for the damaged
                     # Listening Part 3/4 layout. Keep Reading's established
                     # A/D recovery path byte-for-byte stable.
-                    use_number_anchors=exam_type == "listening",
+                    use_number_anchors=(
+                        exam_type == "listening"
+                        or any(131 <= number <= 146 for number in parsed_by_page.get(page_number, []))
+                    ),
                 ): page_number
                 for page_number in retry_pages
                 if page_number in page_by_number
@@ -4242,6 +4573,7 @@ def extract_exam(
             "skipped_pages": sorted(skip_pages),
             "content_start_page": content_start_page,
             "detected_question_range": list(detected_range) if detected_range else None,
+            "repeated_watermarks_filtered": watermark_texts,
             "reading_roi": roi_metrics,
         },
     }

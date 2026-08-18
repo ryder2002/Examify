@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import mimetypes
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from io import BytesIO
 from pathlib import Path
 from typing import BinaryIO
@@ -11,6 +11,7 @@ from urllib.parse import urlsplit
 
 from minio import Minio
 from minio.commonconfig import CopySource
+from minio.datatypes import PostPolicy
 
 from config import settings
 
@@ -146,6 +147,40 @@ class ObjectStorage:
         if not parsed.path or not parsed.query:
             raise RuntimeError("MinIO không tạo được signed internal URL")
         return f"{prefix.rstrip('/')}{parsed.path}?{parsed.query}"
+
+    def presigned_browser_post(
+        self,
+        bucket: str,
+        key: str,
+        *,
+        content_type: str,
+        minimum_size: int,
+        maximum_size: int,
+        expires: timedelta = timedelta(minutes=15),
+    ) -> dict[str, object]:
+        """Return a same-origin, exact-key POST policy for direct upload.
+
+        The browser posts to Nginx, which streams the signed multipart request
+        to private MinIO. The policy—not a public bucket—authorizes one object,
+        one MIME and a narrow content-length range for at most 15 minutes.
+        """
+
+        if minimum_size < 0 or maximum_size < minimum_size:
+            raise ValueError("Khoảng kích thước upload không hợp lệ")
+        safe_key = self.safe_key(key)
+        policy = PostPolicy(bucket, datetime.now(timezone.utc) + expires)
+        policy.add_equals_condition("key", safe_key)
+        policy.add_equals_condition("Content-Type", content_type)
+        policy.add_content_length_range_condition(minimum_size, maximum_size)
+        fields = self.client.presigned_post_policy(policy)
+        fields["key"] = safe_key
+        fields["Content-Type"] = content_type
+        return {
+            "url": f"/client-uploads/{bucket}",
+            "method": "POST",
+            "fields": fields,
+            "expires_in_seconds": int(expires.total_seconds()),
+        }
 
     @staticmethod
     def safe_key(key: str) -> str:

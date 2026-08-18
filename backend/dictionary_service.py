@@ -225,6 +225,52 @@ class LocalDictionary:
         }
 
 
+def get_english_stem_candidates(word: str) -> list[str]:
+    cleaned = word.strip().casefold()
+    if not cleaned or len(cleaned) <= 2:
+        return [word]
+
+    candidates = [word, cleaned]
+
+    if cleaned.endswith("ed") and len(cleaned) > 3:
+        if cleaned.endswith("ied") and len(cleaned) > 4:
+            candidates.append(cleaned[:-3] + "y")
+        candidates.append(cleaned[:-1])
+        candidates.append(cleaned[:-2])
+        if len(cleaned) > 4 and cleaned[-3] == cleaned[-4] and cleaned[-3] in "bcdfghlmnprst":
+            candidates.append(cleaned[:-3])
+
+    if cleaned.endswith("ing") and len(cleaned) > 4:
+        candidates.append(cleaned[:-3])
+        candidates.append(cleaned[:-3] + "e")
+        if cleaned.endswith("ying") and len(cleaned) > 4:
+            candidates.append(cleaned[:-4] + "y")
+        if len(cleaned) > 5 and cleaned[-4] == cleaned[-5] and cleaned[-4] in "bcdfghlmnprst":
+            candidates.append(cleaned[:-4])
+
+    if cleaned.endswith("s") and len(cleaned) > 3 and not cleaned.endswith("ss"):
+        if cleaned.endswith("ies") and len(cleaned) > 4:
+            candidates.append(cleaned[:-3] + "y")
+        elif cleaned.endswith("es") and len(cleaned) > 4:
+            candidates.append(cleaned[:-2])
+            candidates.append(cleaned[:-1])
+        else:
+            candidates.append(cleaned[:-1])
+
+    seen: set[str] = set()
+    result: list[str] = []
+    for item in candidates:
+        norm = _normalized_key(item)
+        if norm and norm not in seen and len(norm) >= 2:
+            seen.add(norm)
+            result.append(item)
+    return result
+
+
+def lookup_dictionary_candidates(raw_query: str, source: str) -> dict[str, Any]:
+    return dictionary_service.lookup(raw_query, source)
+
+
 class DictionaryService:
     def __init__(
         self,
@@ -254,13 +300,16 @@ class DictionaryService:
             return cached
 
         if source == "en":
-            local_result = self.local_dictionary.lookup(query)
-            if local_result is not None:
-                local_result["cached"] = False
-                self.cache.set(
-                    cache_key, local_result, settings.dictionary_cache_ttl_seconds
-                )
-                return local_result
+            candidates = get_english_stem_candidates(query)
+            for candidate in candidates:
+                local_result = self.local_dictionary.lookup(candidate)
+                if local_result is not None:
+                    local_result["query"] = query
+                    local_result["cached"] = False
+                    self.cache.set(
+                        cache_key, local_result, settings.dictionary_cache_ttl_seconds
+                    )
+                    return local_result
 
         try:
             result = (
@@ -328,12 +377,17 @@ class DictionaryService:
     def _lookup_english(self, query: str) -> dict[str, Any]:
         warnings: list[str] = []
         provider_errors = 0
-        try:
-            entry = self._dictionary_entry(query)
-        except DictionaryUnavailable:
-            entry = None
-            provider_errors += 1
-            warnings.append("Tạm thời không tải được định nghĩa tiếng Anh.")
+        entry = None
+        candidates = get_english_stem_candidates(query)
+        for candidate in candidates:
+            try:
+                entry = self._dictionary_entry(candidate)
+                if entry is not None:
+                    break
+            except DictionaryUnavailable:
+                provider_errors += 1
+                warnings.append("Tạm thời không tải được định nghĩa tiếng Anh.")
+                break
         try:
             translations = self._translations(query, "en", "vi")
         except DictionaryUnavailable:

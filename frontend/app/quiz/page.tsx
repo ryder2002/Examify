@@ -1606,7 +1606,7 @@ export default function QuizPage() {
             <AudioWavePlayer
               key={selectedAudio.id}
               audio={selectedAudio}
-              autoPlay={false}
+              autoPlay={true}
             />
           </div>
         )}

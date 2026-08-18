@@ -18,7 +18,8 @@ type MediaState = {
 function isPrivateApiUrl(source: string) {
   return (
     source.startsWith("/api/extractions/") ||
-    source.startsWith("/api/desktop/")
+    source.startsWith("/api/desktop/") ||
+    source.startsWith("client-ocr:")
   );
 }
 
@@ -44,14 +45,20 @@ export function useAuthenticatedMediaUrl(source: string): MediaState {
     let objectUrl = "";
     setState({ url: "", loading: true, error: null });
 
-    apiFetch(source, { signal: controller.signal })
-      .then(async (response) => {
+    const request = source.startsWith("client-ocr:")
+      ? import("@/lib/client-ocr/crop").then(async ({ clientOcrAssetBlob }) => {
+          const blob = await clientOcrAssetBlob(source);
+          if (!blob) throw new Error("Crop local không còn tồn tại");
+          return blob;
+        })
+      : apiFetch(source, { signal: controller.signal }).then(async (response) => {
         if (!response.ok) {
           const payload = await response.json().catch(() => ({}));
           throw new Error(payload.detail || "Không tải được tệp riêng tư");
         }
         return response.blob();
-      })
+      });
+    request
       .then((blob) => {
         if (controller.signal.aborted) return;
         objectUrl = URL.createObjectURL(blob);

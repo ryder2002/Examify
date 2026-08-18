@@ -64,6 +64,70 @@ export function dictionarySourceForText(value: string): DictionaryDirection {
   return VIETNAMESE_MARKS.test(value.normalize("NFC")) ? "vi" : "en";
 }
 
+export function stemEnglishWord(word: string): string {
+  const candidates = getEnglishCandidates(word);
+  return candidates[candidates.length - 1] || word;
+}
+
+export function getEnglishCandidates(word: string): string[] {
+  const cleaned = word.trim().toLowerCase();
+  if (!cleaned || cleaned.length <= 2) return [word];
+
+  const candidates: string[] = [word, cleaned];
+
+  if (cleaned.endsWith("ed") && cleaned.length > 3) {
+    if (cleaned.endsWith("ied") && cleaned.length > 4) {
+      candidates.push(cleaned.slice(0, -3) + "y");
+    }
+    candidates.push(cleaned.slice(0, -1));
+    candidates.push(cleaned.slice(0, -2));
+    if (
+      cleaned.length > 4 &&
+      cleaned[cleaned.length - 3] === cleaned[cleaned.length - 4] &&
+      "bcdfghlmnprst".includes(cleaned[cleaned.length - 3])
+    ) {
+      candidates.push(cleaned.slice(0, -3));
+    }
+  }
+
+  if (cleaned.endsWith("ing") && cleaned.length > 4) {
+    candidates.push(cleaned.slice(0, -3));
+    candidates.push(cleaned.slice(0, -3) + "e");
+    if (cleaned.endsWith("ying") && cleaned.length > 4) {
+      candidates.push(cleaned.slice(0, -4) + "y");
+    }
+    if (
+      cleaned.length > 5 &&
+      cleaned[cleaned.length - 4] === cleaned[cleaned.length - 5] &&
+      "bcdfghlmnprst".includes(cleaned[cleaned.length - 4])
+    ) {
+      candidates.push(cleaned.slice(0, -4));
+    }
+  }
+
+  if (cleaned.endsWith("s") && cleaned.length > 3 && !cleaned.endsWith("ss")) {
+    if (cleaned.endsWith("ies") && cleaned.length > 4) {
+      candidates.push(cleaned.slice(0, -3) + "y");
+    } else if (cleaned.endsWith("es") && cleaned.length > 4) {
+      candidates.push(cleaned.slice(0, -2));
+      candidates.push(cleaned.slice(0, -1));
+    } else {
+      candidates.push(cleaned.slice(0, -1));
+    }
+  }
+
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const item of candidates) {
+    const key = item.toLowerCase();
+    if (key && !seen.has(key) && key.length >= 2) {
+      seen.add(key);
+      result.push(item);
+    }
+  }
+  return result;
+}
+
 export function normalizeSelectedDictionaryText(value: string): string | null {
   const normalized = value
     .normalize("NFC")

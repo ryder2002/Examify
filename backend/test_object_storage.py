@@ -9,6 +9,28 @@ from object_storage import ObjectStorage
 
 
 class ObjectStorageRedirectTests(unittest.TestCase):
+    def test_browser_post_policy_is_same_origin_and_exact_size(self) -> None:
+        storage = ObjectStorage.__new__(ObjectStorage)
+        storage.client = Mock()
+        storage.client.presigned_post_policy.return_value = {
+            "policy": "signed-policy",
+            "x-amz-signature": "signature",
+        }
+
+        result = storage.presigned_browser_post(
+            "examify-sources",
+            "exams/exam/revisions/session/source/source.pdf",
+            content_type="application/pdf",
+            minimum_size=123,
+            maximum_size=123,
+        )
+
+        self.assertEqual(result["url"], "/client-uploads/examify-sources")
+        self.assertEqual(result["fields"]["key"], "exams/exam/revisions/session/source/source.pdf")
+        self.assertEqual(result["fields"]["Content-Type"], "application/pdf")
+        self.assertEqual(result["expires_in_seconds"], 900)
+        storage.client.presigned_post_policy.assert_called_once()
+
     def test_put_stream_reuses_seekable_upload_without_copy(self) -> None:
         storage = ObjectStorage.__new__(ObjectStorage)
         storage.client = Mock()

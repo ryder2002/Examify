@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "check:ocr-assets": "node scripts/check-ocr-assets.mjs",
     "check:quiz-budget": "node scripts/check-quiz-budget.mjs",
     "start": "next start",
     "lint": "tsc --noEmit",
@@ -35,13 +36,16 @@
     "clsx": "^2.1.1",
     "lucide-react": "^0.460.0",
     "next": "16.3.0",
+    "pdfjs-dist": "5.7.284",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-dropzone": "^14.2.10",
     "tailwind-merge": "^2.5.4",
+    "tesseract.js": "7.0.0",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
+    "@playwright/test": "1.62.1",
     "@tauri-apps/cli": "^2.8.4",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",

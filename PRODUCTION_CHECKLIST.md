@@ -1,5 +1,29 @@
 # Production checklist và runbook
 
+## Current OCR release gate (server Tesseract)
+
+- [x] Web creator upload uses `/api/extractions`; Celery queue `ocr` runs pinned
+  server Tesseract/Poppler/OpenCV with bounded page and engine workers.
+- [x] Browser only uploads and polls `GET /api/extractions/{job_id}`; it does not
+  initialize Tesseract.js for new PDF jobs.
+- [x] Pipeline 3.6 filters repeated central watermark OCR noise, preserves source
+  page pixels, and retries number/header-anchored Part 3/4 and Part 6/7 blocks.
+- [x] `LC5.pdf` and `RC5.pdf` server correctness runs pass question coverage;
+  exact fixture metrics are recorded in `LOAD_TEST.md`.
+- [x] `/api/v1/client-extractions` remains only for old client drafts; it is not
+  used by the new upload form.
+- [x] Answer-key images/PDF and scanned solution PDFs use local OCR. Server
+  `/api/v1/solution-imports/validate` accepts rows only.
+- [ ] Run 50/100/150/200-user k6 matrix while one OCR creator job runs; no
+  capacity number is valid until CPU/RAM/queue wait are recorded.
+- [ ] Migrate the legacy existing-exam edit session to the browser source/
+  manifest flow before removing its compatibility clone/page path.
+- [ ] Run the golden watermark corpus and browser memory/latency gate on 4-core
+  / 8 GiB and 8-core / 16 GiB staging devices before enabling the default flag.
+- [ ] Run 50/100/150/200-user k6 matrix and the 200-submit burst on staging;
+  no capacity number is valid until those measurements are recorded in
+  `LOAD_TEST.md`.
+
 ## Monolith một máy chủ (PostgreSQL + MinIO nội bộ)
 
 Stack local/server hiện chạy toàn bộ trên một Docker host: PostgreSQL, MinIO,
@@ -72,9 +96,9 @@ docker compose logs --since=15m api worker nginx | \
   Xác định đúng cặp/owner từ production DB và backup trước khi repair hoặc tạo
   lại; hotfix chỉ bảo đảm các lượt tạo mới không phát sinh split record.
 
-Máy đích: Intel Core i5-12400F (6 core/12 thread), 32 GB RAM, SSD 512 GB,
-Linux, 1 Gbps. Production gate 300 active users; 400 là stretch. Một host/một
-SSD không phải HA.
+Mức triển khai bảo thủ: Linux 8 CPU / 12--16 GiB RAM / SSD 100 GiB, một host
+không phải HA. Workload mục tiêu là 300--400 tài khoản và khoảng 200 học viên
+active đồng thời; chỉ staging load test mới được xác nhận capacity.
 
 ## Hotfix media/PWA/Desktop account — gate triển khai
 
@@ -141,26 +165,25 @@ staging cách ly.
 
 | Service | CPU quota | RAM limit | DB pool tối đa |
 |---|---:|---:|---:|
-| PostgreSQL | 2.5 | 7 GB | `max_connections=80` |
-| FastAPI, 4 workers | 4.0 | 4 GB | 4 + overflow 2/worker = 24 |
-| MinIO | 1.0 | 2 GB | — |
-| Redis AOF/noeviction | 0.5 | 512 MB | — |
-| Next.js | 0.75 | 1 GB | — |
+| PostgreSQL | 2.0 | 3.5 GB | `max_connections=80` |
+| FastAPI, 4 workers | 4.0 | 2 GB | 5 + overflow 1/worker = 24 |
+| MinIO | 0.75 | 768 MB | — |
+| Redis AOF/noeviction | 0.5 | 384 MB | — |
+| Next.js | 0.75 | 600 MB | — |
 | Nginx | 0.5 | 256 MB | — |
+| Media/document worker | 2.0 | 1.5 GB | 2 |
 | Maintenance worker | 0.5 | 768 MB | 2 + overflow 1 |
 | Scheduler | 0.1 | 256 MB | 1 + overflow 1 |
 | Monitoring/exporters | bounded | khoảng 2 GB | exporter nhỏ |
-| OCR ngoài giờ thi | 2.0 | 4 GB | 2 + overflow 1 |
-| OCR trong giờ thi | 0 | 0 | 0 |
 
-API + maintenance + beat có trần lý thuyết 29 connection; có OCR là 32, chưa
-tính migration/admin/exporter/backup nhưng vẫn giữ headroom dưới 80. Không tăng
-worker/pool riêng lẻ; phải tính lại tổng và load test.
+API + media + maintenance + beat có trần lý thuyết khoảng 31 connection, chưa
+tính migration/admin/exporter/backup nhưng vẫn giữ headroom dưới 80. Không có
+OCR worker trên server; không tăng worker/pool riêng lẻ nếu chưa có load test.
 
 PostgreSQL giữ `fsync`, `synchronous_commit`, `full_page_writes` bật. Baseline
-Compose: shared buffers 4 GB, effective cache 18 GB, work mem 4 MB, maintenance
-work mem 512 MB, max WAL 8 GB, statement 10 giây, lock 2 giây, idle transaction
-15 giây. Chỉ đổi sau khi có `EXPLAIN`/metrics từ staging.
+Compose: shared buffers 1 GB, effective cache 6 GB, work mem 4 MB, maintenance
+work mem 256 MB, statement 10 giây, lock 2 giây, idle transaction 15 giây. Chỉ
+đổi sau khi có `EXPLAIN`/metrics từ staging.
 
 ## 4. Validation trước deploy
 
@@ -422,10 +445,7 @@ MINIO_ENDPOINT=minio:9000
 MINIO_ACCESS_KEY=...
 MINIO_SECRET_KEY=...
 MINIO_SECURE=false
-OCR_ENABLED=true
-TESSERACT_LANG=eng
-TESSERACT_TIMEOUT_SECONDS=90
-OCR_ENGINE_POOL_SIZE=2
+NEXT_PUBLIC_CLIENT_OCR_ENABLED=1
 ADMIN_EMAIL=...
 ADMIN_PASSWORD=...
 ```
@@ -589,3 +609,18 @@ PgBouncer giữ backend pool tối đa `50` để bảo vệ CPU/RAM.
 - [ ] Sau deploy, giám sát Celery queue, `ocr_progress`, free scratch disk và
   PostgreSQL error/latency trong giờ đầu. Không tăng worker/page-worker pool chỉ
   vì OCR job dài hơn trên fixture chất lượng cao.
+
+## Browser OCR WASM asset gate (2026-08-14)
+
+- [ ] Trong thư mục frontend, chạy `npm run check:ocr-assets` trước khi build;
+  bước `docker build` cũng phải chạy gate này.
+- [ ] Sau deploy, xác nhận hai URL sau trả binary WASM thật, không trả HTML
+  của Next/Nginx: `/ocr/tesseract/core/tesseract-core-simd-lstm.wasm` và
+  `/ocr/opencv/opencv_js.wasm`.
+- [ ] Xác nhận response có status 200/206, không redirect về trang lỗi, và
+  `Content-Type` là `application/wasm` hoặc MIME binary tương đương.
+- [ ] Mở DevTools Network trên một máy staging thật, tải hai asset và kiểm tra
+  8 byte đầu là `00 61 73 6d 01 00 00 00`. Nếu thấy `3c 21 44 4f`, đang nhận
+  HTML fallback và phải sửa static route/cache trước khi cho người dùng OCR.
+- [ ] Chạy cả golden Listening/Reading sau build production. Không dùng build
+  dev làm bằng chứng cuối cùng vì rewrite/static cache có thể khác production.

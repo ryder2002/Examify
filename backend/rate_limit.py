@@ -91,6 +91,14 @@ _POLICIES = (
         RateLimitPolicy("upload", 60, 12, 30, 30),
     ),
     (
+        re.compile(r"^/api/v1/client-extractions(?:/|$)"),
+        RateLimitPolicy("client-extraction", 60, 300, 30, 30),
+    ),
+    (
+        re.compile(r"^/api/v1/solution-imports/validate$"),
+        RateLimitPolicy("solution-validate", 60, 300, 30, 30),
+    ),
+    (
         re.compile(r"/answer-key-image$"),
         RateLimitPolicy("answer-key", 60, 30, 60, 60),
     ),

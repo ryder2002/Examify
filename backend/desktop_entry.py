@@ -242,7 +242,6 @@ def configure(args: argparse.Namespace) -> None:
             "TOOL_TAO_DE_DATA_DIR": str(data_dir / "jobs"),
             "AUTH_REQUIRED": "false",
             "USE_CELERY": "false",
-            "OCR_ENABLED": "true",
             "DATABASE_URL": "",
             "REDIS_URL": "",
             "MINIO_ENDPOINT": "",

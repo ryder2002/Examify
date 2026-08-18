@@ -38,6 +38,44 @@ import type {
   Stimulus,
 } from "@/lib/utils";
 
+function localManifestDraft(
+  key: string,
+  manifest: import("@/lib/client-ocr/types").ClientOcrManifestV1,
+): ExamDraft {
+  return {
+    schema_version: 2,
+    job_id: key,
+    exam_type: manifest.exam_type,
+    status: "review",
+    stage: "OCR local đã hoàn tất",
+    progress: 100,
+    processing_phase: "review",
+    phase_progress: 100,
+    audio_progress: 0,
+    ocr_progress: 100,
+    audio_stage: "",
+    ocr_stage: "Đã xử lý trên thiết bị",
+    filename: manifest.source_filename,
+    requested_count: manifest.requested_count,
+    returned_count: manifest.questions.length,
+    questions: manifest.questions,
+    stimuli: manifest.stimuli,
+    issues: manifest.issues,
+    error: null,
+    cached: true,
+    metadata: {
+      ...manifest.metadata,
+      page_count: manifest.page_count,
+      source_sha256: manifest.source_sha256,
+      ingest_mode: "client_ocr",
+      client_draft_key: key,
+    },
+    audio: null,
+    audios: [],
+    solutions: manifest.solutions || [],
+  };
+}
+
 function partFor(examType: ExamDraft["exam_type"], number: number) {
   if (examType === "listening") {
     if (number <= 6) return "Part 1 - Phần 1";
@@ -153,7 +191,7 @@ function cleanQuestionIssues(question: Question, examType: ExamDraft["exam_type"
   if (!hasIncompleteQuestionContent(question, examType)) {
     return question.issues.filter(
       (issue) =>
-        !["question_missing", "options_missing", "low_confidence"].includes(issue),
+        !["question_missing", "options_missing", "low_confidence", "manual_review"].includes(issue),
     );
   }
   return question.issues;
@@ -162,6 +200,7 @@ function cleanQuestionIssues(question: Question, examType: ExamDraft["exam_type"
 export default function ReviewPage() {
   const router = useRouter();
   const [draft, setDraft] = useState<ExamDraft | null>(null);
+  const [clientDraftKey, setClientDraftKey] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [reviewTab, setReviewTab] = useState<"content" | "solutions">("content");
@@ -205,11 +244,29 @@ export default function ReviewPage() {
       typeof window !== "undefined"
         ? new URLSearchParams(window.location.search).get("job")
         : null;
+    const queryClientDraft =
+      typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search).get("clientDraft")
+        : null;
     if (
       typeof window !== "undefined" &&
       new URLSearchParams(window.location.search).get("tab") === "solutions"
     ) {
       setReviewTab("solutions");
+    }
+    if (queryClientDraft) {
+      setClientDraftKey(queryClientDraft);
+      void import("@/lib/client-ocr")
+        .then(({ getClientOcrDraft }) => getClientOcrDraft(queryClientDraft))
+        .then((localDraft) => {
+          if (!localDraft?.manifest) throw new Error("Không tìm thấy manifest OCR local.");
+          setDraft(addMissingQuestionSlots(localManifestDraft(queryClientDraft, localDraft.manifest)));
+        })
+        .catch((reason) =>
+          setError(reason instanceof Error ? reason.message : "Không tải được draft local"),
+        )
+        .finally(() => setLoading(false));
+      return;
     }
     const jobId = queryJob || sessionStorage.getItem("extraction-job");
     if (!jobId) {
@@ -242,6 +299,7 @@ export default function ReviewPage() {
 
   useEffect(() => {
     if (!draft) return;
+    if (clientDraftKey) return;
     const serialized = JSON.stringify(draft.solutions || []);
     if (serialized === savedSolutionsRef.current) return;
     const timer = window.setTimeout(() => {
@@ -254,7 +312,7 @@ export default function ReviewPage() {
       });
     }, 1200);
     return () => window.clearTimeout(timer);
-  }, [draft?.job_id, draft?.solutions]);
+  }, [clientDraftKey, draft?.job_id, draft?.solutions]);
 
   const sortedQuestions = useMemo(() => {
     if (!draft) return [];
@@ -375,6 +433,60 @@ export default function ReviewPage() {
     stimuli: Stimulus[],
   ): Promise<ExamDraft> {
     if (!draft) throw new Error("Draft chưa sẵn sàng");
+    if (clientDraftKey) {
+      const { getClientOcrBlob, getClientOcrDraft, putClientOcrDraft } = await import(
+        "@/lib/client-ocr"
+      );
+      const local = await getClientOcrDraft(clientDraftKey);
+      if (!local?.manifest) throw new Error("Draft OCR local không còn tồn tại");
+      const assets = [] as typeof local.manifest.assets;
+      for (const stimulus of stimuli) {
+        for (const asset of stimulus.assets) {
+          if (!asset.url.startsWith("client-ocr:")) continue;
+          const localBlobKey = asset.url.slice("client-ocr:".length);
+          const blob = await getClientOcrBlob(localBlobKey);
+          if (!blob) throw new Error(`Crop ${asset.id} không còn trong kho local.`);
+          assets.push({
+            id: asset.id,
+            page: asset.page,
+            bbox: asset.bbox,
+            width: asset.width,
+            height: asset.height,
+            contentType: "image/webp",
+            size: blob.size,
+            localBlobKey,
+          });
+        }
+      }
+      const answerKey = Object.fromEntries(
+        questions
+          .filter((question) => question.correct)
+          .map((question) => [String(question.number), question.correct as string]),
+      );
+      const unresolvedNumbers = new Set(
+        questions
+          .filter((question) => needsManualEntry(question, local.manifest!.exam_type))
+          .map((question) => question.number),
+      );
+      local.manifest = {
+        ...local.manifest,
+        questions,
+        stimuli,
+        assets,
+        solutions: draft.solutions || local.manifest.solutions || [],
+        answer_key: answerKey,
+        issues: local.manifest.issues.filter(
+          (issue) =>
+            issue.question_number == null ||
+            unresolvedNumbers.has(issue.question_number) ||
+            !["question_missing", "text_missing", "options_missing"].includes(issue.code),
+        ),
+      };
+      local.updatedAt = new Date().toISOString();
+      local.status = "review";
+      await putClientOcrDraft(local);
+      return localManifestDraft(clientDraftKey, local.manifest);
+    }
     const response = await apiFetch(`/api/extractions/${draft.job_id}/draft`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -405,6 +517,24 @@ export default function ReviewPage() {
     selection: CropSelection,
   ) {
     if (!draft) return;
+    let nextAsset: AssetRef | null = null;
+    if (clientDraftKey) {
+      const { createClientOcrCrop } = await import("@/lib/client-ocr");
+      const crop = await createClientOcrCrop(
+        clientDraftKey,
+        assetId,
+        selection.page,
+        selection.bbox,
+      );
+      nextAsset = {
+        id: assetId,
+        url: `client-ocr:${crop.blobKey}`,
+        page: selection.page,
+        bbox: selection.bbox,
+        width: crop.width,
+        height: crop.height,
+      };
+    }
     const stimuli = draft.stimuli.map((stimulus) =>
       stimulus.id === stimulusId
         ? {
@@ -412,7 +542,7 @@ export default function ReviewPage() {
             issues: stimulus.issues.filter((issue) => issue !== "crop_review"),
             assets: stimulus.assets.map((asset) =>
               asset.id === assetId
-                ? { ...asset, page: selection.page, bbox: selection.bbox }
+                ? nextAsset || { ...asset, page: selection.page, bbox: selection.bbox }
                 : asset,
             ),
           }
@@ -430,6 +560,48 @@ export default function ReviewPage() {
   async function createManualCrop(selection: CropSelection) {
     if (!draft || !selection.questionNumbers?.length) return;
     try {
+      if (clientDraftKey) {
+        const { createClientOcrCrop } = await import("@/lib/client-ocr");
+        const stimulusId = crypto.randomUUID();
+        const assetId = crypto.randomUUID();
+        const crop = await createClientOcrCrop(
+          clientDraftKey,
+          assetId,
+          selection.page,
+          selection.bbox,
+        );
+        const asset: AssetRef = {
+          id: assetId,
+          url: `client-ocr:${crop.blobKey}`,
+          page: selection.page,
+          bbox: selection.bbox,
+          width: crop.width,
+          height: crop.height,
+        };
+        const selected = new Set(selection.questionNumbers);
+        const questions = draft.questions.map((question) =>
+          selected.has(question.number)
+            ? { ...question, stimulus_id: stimulusId, group_id: stimulusId }
+            : question,
+        );
+        const stimuli = [
+          ...draft.stimuli,
+          {
+            id: stimulusId,
+            kind: "image" as const,
+            title: "Ảnh cắt thủ công",
+            assets: [asset],
+            question_numbers: [...selection.questionNumbers],
+            page_numbers: [selection.page],
+            confidence: 100,
+            issues: [],
+          },
+        ];
+        const updated = await patchDraft(questions, stimuli);
+        setDraft(updated);
+        setManualCropOpen(false);
+        return;
+      }
       const response = await apiFetch(
         `/api/extractions/${draft.job_id}/manual-stimulus`,
         {
@@ -558,6 +730,33 @@ export default function ReviewPage() {
       setError(null);
       try {
         const saved = await patchDraft(draft.questions, draft.stimuli);
+        if (clientDraftKey) {
+          const { commitClientOcrDraft, getClientOcrDraft } = await import("@/lib/client-ocr");
+          const local = await getClientOcrDraft(clientDraftKey);
+          if (!local?.manifest) throw new Error("Không tìm thấy draft OCR local.");
+          const result = await commitClientOcrDraft(local, "Listening Component", "", {
+            isFullTestComponent: true,
+          });
+          const exam: FinalExam = {
+            schema_version: 2,
+            job_id: local.serverSessionId || clientDraftKey,
+            exam_type: "listening",
+            requested_count: saved.requested_count || saved.questions.length,
+            returned_count: saved.questions.length,
+            total: saved.questions.length,
+            questions: saved.questions,
+            stimuli: saved.stimuli,
+            audio: null,
+            audios: [],
+            solutions: saved.solutions || [],
+            exam_id: result.exam_id,
+            title: "Listening Component",
+          };
+          sessionStorage.setItem("pending-listening-exam", JSON.stringify(exam));
+          sessionStorage.removeItem("extraction-job");
+          window.location.assign("/?next=reading");
+          return;
+        }
         if (editingExam?.full_test && editingExam.reading_job_id) {
           sessionStorage.setItem("extraction-job", editingExam.reading_job_id);
           window.location.assign(
@@ -606,6 +805,47 @@ export default function ReviewPage() {
     setShowFinalizeModal(false);
     try {
       const saved = await patchDraft(draft.questions, draft.stimuli);
+      if (clientDraftKey) {
+        const { commitClientOcrDraft, getClientOcrDraft } = await import("@/lib/client-ocr");
+        const local = await getClientOcrDraft(clientDraftKey);
+        if (!local?.manifest) throw new Error("Không tìm thấy draft OCR local.");
+        const pendingRaw = saved.exam_type === "reading"
+          ? sessionStorage.getItem("pending-listening-exam")
+          : null;
+        const result = await commitClientOcrDraft(
+          local,
+          modalTitle.trim(),
+          modalTag.trim(),
+          {
+            targetExamId: editingExam?.exam_id || editingExam?.id,
+            baseRevision: editingExam?.base_revision,
+            isFullTestComponent: Boolean(pendingRaw),
+          },
+        );
+        if (pendingRaw) {
+          const listening = JSON.parse(pendingRaw) as FinalExam;
+          if (!listening.exam_id) throw new Error("Thiếu mã đề Listening để hợp nhất.");
+          const combineResponse = await apiFetch("/api/v1/exams/combine", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              listening_exam_id: listening.exam_id,
+              reading_exam_id: result.exam_id,
+              title: modalTitle.trim(),
+              category: modalTag.trim(),
+            }),
+          });
+          const combinePayload = await combineResponse.json().catch(() => ({}));
+          if (!combineResponse.ok) {
+            throw new Error(combinePayload.detail || "Không thể hợp nhất đề TOEIC 200 câu");
+          }
+          sessionStorage.removeItem("pending-listening-exam");
+        }
+        sessionStorage.removeItem("editing-exam");
+        sessionStorage.removeItem("extraction-job");
+        window.location.assign(await finalizedLibraryPath());
+        return;
+      }
       if (editingExam?.edit_session_id) {
         const response = await apiFetch(
           `/api/v1/exam-bank/edit-sessions/${editingExam.edit_session_id}/finalize`,
@@ -1427,6 +1667,7 @@ export default function ReviewPage() {
       {cropTarget && (
         <CropEditor
           jobId={draft.job_id}
+          localDraftKey={clientDraftKey || undefined}
           asset={cropTarget.asset}
           pageCount={sourcePageCount}
           label="Chỉnh vùng ảnh"
@@ -1439,6 +1680,7 @@ export default function ReviewPage() {
       {manualCropOpen && (
         <CropEditor
           jobId={draft.job_id}
+          localDraftKey={clientDraftKey || undefined}
           mode="manual"
           pageCount={sourcePageCount}
           availableQuestionNumbers={draft.questions.map((question) => question.number)}

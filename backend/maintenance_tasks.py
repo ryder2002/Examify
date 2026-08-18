@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 
-from sqlalchemy import delete, select, update
+from sqlalchemy import and_, delete, or_, select, update
 
 from celery_app import celery_app
 from classroom_api import finalize_expired_class_attempts
@@ -264,7 +264,7 @@ def purge_expired_jobs(
     limit: int = 100,
     retention_hours: int = 24,
 ) -> dict[str, int]:
-    """Bound transient OCR data without deleting durable finalized exams.
+    """Bound legacy jobs and expired client-ingest sessions.
 
     ExamSource and immutable version assets are the edit/playback source of
     truth after finalize. Legacy exams that do not yet have an ExamSource keep
@@ -292,7 +292,16 @@ def purge_expired_jobs(
         }
         candidates = session.scalars(
             select(Job)
-            .where(Job.updated_at < cutoff)
+            .where(
+                or_(
+                    and_(
+                        Job.ingest_mode == "client_ocr",
+                        Job.expires_at.is_not(None),
+                        Job.expires_at < now,
+                    ),
+                    and_(Job.ingest_mode != "client_ocr", Job.updated_at < cutoff),
+                )
+            )
             .order_by(Job.updated_at)
             .limit(bounded)
         ).all()
@@ -307,22 +316,36 @@ def purge_expired_jobs(
                 )
             ).all()
         )
-        targets = sorted(
-            candidate_ids - active_job_ids - unsafe_legacy_job_ids
-        )
+        target_ids = candidate_ids - active_job_ids - unsafe_legacy_job_ids
+        targets = [row for row in candidates if row.id in target_ids]
 
     cleaned: list[str] = []
-    for job_id in targets:
+    for job in targets:
         try:
-            for bucket in {
-                settings.minio_bucket_sources,
-                settings.minio_bucket_assets,
-                settings.minio_bucket_audio,
-            }:
-                storage.remove_prefix(bucket, f"jobs/{job_id}/")
+            if job.ingest_mode == "client_ocr":
+                # A committed session only expires its control row; source and
+                # assets are immutable exam data. Cancelled/abandoned sessions
+                # have no database owner and their exact revision prefix is safe.
+                if job.status != "committed":
+                    reserved_exam_id = str((job.payload or {}).get("reserved_exam_id") or "")
+                    if reserved_exam_id:
+                        prefix = f"exams/{reserved_exam_id}/revisions/{job.id}/"
+                        for bucket in {
+                            settings.minio_bucket_sources,
+                            settings.minio_bucket_assets,
+                            settings.minio_bucket_audio,
+                        }:
+                            storage.remove_prefix(bucket, prefix)
+            else:
+                for bucket in {
+                    settings.minio_bucket_sources,
+                    settings.minio_bucket_assets,
+                    settings.minio_bucket_audio,
+                }:
+                    storage.remove_prefix(bucket, f"jobs/{job.id}/")
         except Exception:
             continue
-        cleaned.append(job_id)
+        cleaned.append(job.id)
     if cleaned:
         with session_scope() as session:
             session.execute(delete(Job).where(Job.id.in_(cleaned)))

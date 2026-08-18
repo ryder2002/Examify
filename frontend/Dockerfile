@@ -9,6 +9,7 @@ ARG BACKEND_URL=http://api:8000
 ENV BACKEND_URL=${BACKEND_URL}
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY . .
+RUN npm run check:ocr-assets
 RUN npm run build
 
 FROM node:22.23.2-alpine AS runner

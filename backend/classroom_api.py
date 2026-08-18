@@ -16,7 +16,7 @@ import jwt
 from fastapi import APIRouter, HTTPException, Query, Request, Response
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
-from sqlalchemy import func, or_, select
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.dialects.postgresql import insert as postgresql_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.exc import IntegrityError
@@ -58,6 +58,7 @@ from models import (
 )
 from object_storage import storage
 from presence_store import PRESENCE_TTL_SECONDS, presence_store
+from pagination import decode_submitted_cursor, encode_submitted_cursor
 from toeic_score import scores as toeic_scores
 
 
@@ -324,6 +325,33 @@ def _class_session(request: Request, session: Any) -> tuple[ClassMember, Classro
         ):
             member.last_seen_at = now
         return member, classroom
+    student_assignment_id = getattr(request.state, "student_assignment_id", None)
+    student_classroom_id = getattr(request.state, "student_classroom_id", None)
+    if student_assignment_id or student_classroom_id:
+        identity = require_roles(request, "student")
+        query = (
+            select(ClassMember, Classroom)
+            .join(Classroom, Classroom.id == ClassMember.classroom_id)
+            .where(
+                ClassMember.user_id == identity["user_id"],
+                ClassMember.status == "active",
+                Classroom.status == "active",
+            )
+        )
+        if student_assignment_id:
+            query = query.join(
+                ClassAssignment,
+                ClassAssignment.classroom_id == Classroom.id,
+            ).where(
+                ClassAssignment.id == student_assignment_id,
+                ClassAssignment.status == "published",
+            )
+        else:
+            query = query.where(Classroom.id == student_classroom_id)
+        row = session.execute(query).first()
+        if row is None:
+            raise HTTPException(status_code=404, detail="Bài thi hoặc lớp học không khả dụng")
+        return row
     token = request.headers.get("x-classroom-session", "").strip()
     if not token:
         raise HTTPException(status_code=401, detail="Thiếu phiên lớp học")
@@ -730,7 +758,7 @@ def _snapshot_exam(
     )
     session.add(version)
     session.flush()
-    projected: dict[int, ExamVersionQuestion] = {}
+    projected: dict[int, dict[str, Any]] = {}
     for question in questions:
         try:
             number = int(question.get("number"))
@@ -739,13 +767,16 @@ def _snapshot_exam(
         if number <= 0 or number in projected:
             continue
         correct = str(question.get("correct") or "").strip().upper()
-        projected[number] = ExamVersionQuestion(
-            exam_version_id=version.id,
-            question_number=number,
-            part_number=_part_number_for_question(number),
-            correct=correct if correct in {"A", "B", "C", "D"} else None,
-        )
-    session.add_all(projected.values())
+        projected[number] = {
+            "exam_version_id": version.id,
+            "question_number": number,
+            "part_number": _part_number_for_question(number),
+            "correct": correct if correct in {"A", "B", "C", "D"} else None,
+        }
+    if projected:
+        # One executemany statement keeps snapshot cost bounded even for a
+        # 200-question Full Test.
+        session.execute(ExamVersionQuestion.__table__.insert(), list(projected.values()))
     assets = session.scalars(
         select(Asset)
         .where(Asset.exam_id == exam.id)
@@ -757,45 +788,27 @@ def _snapshot_exam(
         asset_ref = source_key.rsplit("/", 1)[-1] or asset.filename
         unique_assets.setdefault((asset.bucket, asset_ref), (asset, source_key))
 
-    for (_, asset_ref), (asset, source_key) in unique_assets.items():
-        destination = source_key
-        copied_size = asset.size
-        if storage is not None:
-            destination = f"classroom-versions/{version.id}/{asset_ref}"
-            try:
-                source_stat = storage.client.stat_object(
-                    asset.bucket, storage.safe_key(source_key)
-                )
-                storage.copy_object(asset.bucket, source_key, destination)
-                copied_size = copied_size or source_stat.size
-            except Exception as exc:
-                logger.exception(
-                    "CLASSROOM_ASSET_SNAPSHOT_FAILED exam_id=%s asset_id=%s "
-                    "bucket=%s source_key=%s",
-                    exam.id,
-                    asset.id,
-                    asset.bucket,
-                    source_key,
-                )
-                raise HTTPException(
-                    status_code=502,
-                    detail=f"Không sao chép được tài nguyên {asset_ref}",
-                ) from exc
-        session.add(
-            ExamVersionAsset(
-                exam_version_id=version.id,
-                kind=asset.kind,
-                bucket=asset.bucket,
-                object_key=destination,
-                # Payloads refer to assets by their object basename, while audio
-                # may retain a different original display filename.
-                filename=asset_ref,
-                content_type=asset.content_type,
-                size=copied_size,
-                sha256=asset.sha256,
-                display_order=asset.display_order,
-            )
-        )
+    version_assets = [
+        {
+            "id": uuid4(),
+            "exam_version_id": version.id,
+            "kind": asset.kind,
+            "bucket": asset.bucket,
+            # Client extraction keys are immutable and already include the
+            # reserved exam/revision. Object verification/materialization is
+            # deliberately outside this transaction.
+            "object_key": source_key,
+            "filename": asset_ref,
+            "content_type": asset.content_type,
+            "size": asset.size,
+            "sha256": asset.sha256,
+            "display_order": asset.display_order,
+            "created_at": utcnow(),
+        }
+        for (_, asset_ref), (asset, source_key) in unique_assets.items()
+    ]
+    if version_assets:
+        session.execute(ExamVersionAsset.__table__.insert(), version_assets)
     return version
 
 
@@ -1204,8 +1217,51 @@ def _version_question_rows(
 
 
 def _allowed_version_question_numbers(
-    session: Any, version: ExamVersion, attempt: Attempt | None = None
+    session: Any,
+    version: ExamVersion,
+    attempt: Attempt | None = None,
+    raw_changes: dict[str, str | None] | None = None,
 ) -> set[int]:
+    if raw_changes is not None:
+        candidates: set[int] = set()
+        for raw_number in raw_changes:
+            try:
+                number = int(raw_number)
+            except (TypeError, ValueError):
+                continue
+            if str(number) == str(raw_number).strip() and 1 <= number <= 200:
+                candidates.add(number)
+        if not candidates:
+            return set()
+        query = select(ExamVersionQuestion.question_number).where(
+            ExamVersionQuestion.exam_version_id == version.id,
+            ExamVersionQuestion.question_number.in_(candidates),
+        )
+        if attempt and attempt.selected_part_numbers:
+            query = query.where(
+                ExamVersionQuestion.part_number.in_(
+                    [int(part) for part in attempt.selected_part_numbers]
+                )
+            )
+        rows = {int(number) for number in session.scalars(query)}
+        if rows:
+            return rows
+        projection_exists = session.scalar(
+            select(ExamVersionQuestion.id)
+            .where(ExamVersionQuestion.exam_version_id == version.id)
+            .limit(1)
+        )
+        if projection_exists:
+            return set()
+        # Compatibility only for versions created before the projection
+        # migration; keep the delta bounded after reading legacy JSON.
+        return {
+            number
+            for number, _part_number, _correct in _version_question_rows(
+                session, version, attempt
+            )
+            if number in candidates
+        }
     return {
         number for number, _part_number, _correct in _version_question_rows(
             session, version, attempt
@@ -3130,10 +3186,7 @@ def get_student_classroom(classroom_id: str, request: Request) -> dict[str, Any]
 
 @router.get("/student/classrooms/{classroom_id}/assignments")
 def list_student_assignments(classroom_id: str, request: Request) -> dict[str, Any]:
-    with session_scope() as session:
-        _, member, _ = _student_member(session, request, classroom_id)
-        session.expunge(member)
-    _inject_class_session(request, member)
+    request.state.student_classroom_id = classroom_id
     return class_session_assignments(request)
 
 
@@ -3157,8 +3210,7 @@ def start_student_attempt(
     request: Request,
     body: StudentAttemptStartRequest | None = None,
 ) -> dict[str, Any]:
-    member = _student_member_for_assignment(request, assignment_id)
-    _inject_class_session(request, member)
+    request.state.student_assignment_id = assignment_id
     return start_class_attempt(assignment_id, request, body)
 
 
@@ -3169,8 +3221,7 @@ def create_student_offline_pack(
     body: StudentAttemptStartRequest | None = None,
 ) -> dict[str, Any]:
     """Reserve an authoritative attempt while online for later offline work."""
-    member = _student_member_for_assignment(request, assignment_id)
-    _inject_class_session(request, member)
+    request.state.student_assignment_id = assignment_id
     payload = start_class_attempt(assignment_id, request, body)
     return {
         **payload,
@@ -3254,6 +3305,7 @@ def student_attempt_history(
     request: Request,
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=50, ge=1, le=100),
+    cursor: str | None = Query(default=None, max_length=256),
 ) -> dict[str, Any]:
     identity = require_roles(request, "student")
     with session_scope() as session:
@@ -3269,17 +3321,38 @@ def student_attempt_history(
             )
             or 0
         )
-        rows = session.execute(
+        row_query = (
             select(Attempt, ClassAssignment, Classroom, ExamVersion)
             .join(ClassMember, ClassMember.id == Attempt.class_member_id)
             .join(ClassAssignment, ClassAssignment.id == Attempt.class_assignment_id)
             .join(Classroom, Classroom.id == ClassAssignment.classroom_id)
             .join(ExamVersion, ExamVersion.id == ClassAssignment.exam_version_id)
             .where(*filters)
-            .order_by(Attempt.submitted_at.desc())
-            .offset((page - 1) * page_size)
-            .limit(page_size)
+        )
+        if cursor:
+            try:
+                cursor_time, cursor_id = decode_submitted_cursor(cursor)
+            except ValueError as exc:
+                raise HTTPException(status_code=422, detail=str(exc)) from exc
+            row_query = row_query.where(
+                or_(
+                    Attempt.submitted_at < cursor_time,
+                    and_(
+                        Attempt.submitted_at == cursor_time,
+                        Attempt.id < cursor_id,
+                    ),
+                )
+            )
+        else:
+            row_query = row_query.offset((page - 1) * page_size)
+        fetched_rows = session.execute(
+            row_query
+            .order_by(Attempt.submitted_at.desc(), Attempt.id.desc())
+            .limit(page_size + 1)
         ).all()
+        has_more = len(fetched_rows) > page_size
+        rows = fetched_rows[:page_size]
+        last_attempt = rows[-1][0] if rows else None
         return {
             "items": [
                 {
@@ -3326,6 +3399,12 @@ def student_attempt_history(
             "page": page,
             "page_size": page_size,
             "pages": max(1, (total + page_size - 1) // page_size),
+            "has_more": has_more,
+            "next_cursor": (
+                encode_submitted_cursor(last_attempt.submitted_at, last_attempt.id)
+                if has_more and last_attempt and last_attempt.submitted_at
+                else None
+            ),
         }
 
 
@@ -3661,7 +3740,7 @@ def sync_class_attempt(
                 base_revision=body.base_revision,
                 raw_changes=body.changes,
                 allowed_numbers=_allowed_version_question_numbers(
-                    session, version, attempt
+                    session, version, attempt, body.changes
                 ),
                 time_left_seconds=body.time_left_seconds,
             )

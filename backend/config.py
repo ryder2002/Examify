@@ -88,7 +88,6 @@ class Settings:
     ).strip()
     auth_required: bool = _bool("AUTH_REQUIRED")
     use_celery: bool = _bool("USE_CELERY")
-    ocr_enabled: bool = _bool("OCR_ENABLED", True)
     tesseract_lang: str = os.getenv("TESSERACT_LANG", "eng").strip() or "eng"
     tesseract_data_dir: str = os.getenv("TESSERACT_DATA_DIR", "").strip()
     tesseract_timeout_seconds: int = _int("TESSERACT_TIMEOUT_SECONDS", 90)

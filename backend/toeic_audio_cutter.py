@@ -38,8 +38,8 @@ FINE_SILENCE_SECONDS = 0.45
 # processes keep a 5-vCPU worker busy while leaving headroom for the OCR
 # branch, which runs concurrently in the same Celery task.  The cap prevents
 # a long listening upload from creating 55 decoder/encoder processes at once.
-DEFAULT_CUT_WORKERS = 2
-MAX_CUT_WORKERS = 3
+DEFAULT_CUT_WORKERS = 4
+MAX_CUT_WORKERS = 6
 
 ProgressCallback = Callable[[int, str], None]
 
@@ -523,6 +523,15 @@ def build_output_spans(alignment: Alignment, waves: tuple[Wave, ...]) -> tuple[O
     for number in range(1, 32):
         match = by_key[f"q{number}"]
         start = transition_starts.get(6 if number == 7 else -1, match.start)
+        end = match.end
+        if number == 7:
+            # Q7 includes Part 2 directions; ensure end extends so options A, B, C are fully included
+            next_match = by_key.get("q8")
+            target_end = match.end + max(6.0, (match.start - start) * 0.5 + 4.0)
+            if next_match is not None:
+                end = min(next_match.start - 0.1, target_end)
+            else:
+                end = target_end
         spans.append(
             OutputSpan(
                 key=f"q{number:03d}",
@@ -531,7 +540,7 @@ def build_output_spans(alignment: Alignment, waves: tuple[Wave, ...]) -> tuple[O
                 question_numbers=(number,),
                 group_id=None,
                 start=start,
-                end=match.end,
+                end=end,
             )
         )
     for start_number in range(32, 101, 3):
@@ -584,6 +593,8 @@ def _cut_span(ffmpeg: str, source: Path, destination: Path, span: OutputSpan) ->
                 "96k",
                 "-vbr",
                 "on",
+                "-compression_level",
+                "5",
                 "-application",
                 "audio",
                 # ``temporary`` ends in ``.tmp`` for atomic replacement;

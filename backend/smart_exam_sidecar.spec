@@ -73,7 +73,6 @@ a = Analysis(
         "minio",
         "models",
         "object_storage",
-        "ocr_tasks",
         "persistent_job_store",
         "platform_api",
         "psycopg",

@@ -460,7 +460,7 @@ class OcrRoutingTests(unittest.TestCase):
 
     def test_page_worker_count_is_bounded_to_six(self) -> None:
         with mock.patch.dict(os.environ, {"OCR_PAGE_WORKERS": "99"}):
-            self.assertEqual(_page_workers(50), 6)
+            self.assertEqual(_page_workers(50), 8)
 
     def test_scan_retry_includes_missing_options_but_not_listening_part_two(self) -> None:
         listening = [

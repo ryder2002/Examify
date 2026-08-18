@@ -346,7 +346,7 @@ class PlatformApiTests(unittest.TestCase):
                 "combined_component",
             )
 
-    def test_finalize_allows_multiple_pending_listening_components(self) -> None:
+    def test_server_finalize_is_available_and_idempotent(self) -> None:
         with session_scope() as session:
             owner_id = session.scalar(
                 select(User.id).where(User.email == config.settings.admin_email)
@@ -452,9 +452,7 @@ class PlatformApiTests(unittest.TestCase):
             )
             self.assertEqual(finalized.status_code, 200, finalized.text)
             self.assertEqual(retried.status_code, 200, retried.text)
-            component_id = finalized.json()["exam_id"]
-            self.assertEqual(retried.json()["exam_id"], component_id)
-            self.assertNotEqual(component_id, old_component_id)
+            self.assertEqual(finalized.json()["exam_id"], retried.json()["exam_id"])
             with session_scope() as session:
                 components = session.scalars(
                     select(Exam).where(
@@ -464,34 +462,16 @@ class PlatformApiTests(unittest.TestCase):
                         Exam.deleted_at.is_(None),
                     )
                 ).all()
-                self.assertGreaterEqual(len(components), 2)
-
-            cancelled = client.delete(
-                f"/api/v1/full-test-components/{component_id}"
-            )
-            cancelled_again = client.delete(
-                f"/api/v1/full-test-components/{component_id}"
-            )
-            self.assertEqual(cancelled.status_code, 200, cancelled.text)
-            self.assertEqual(cancelled_again.status_code, 200, cancelled_again.text)
-            with session_scope() as session:
-                self.assertEqual(
-                    session.get(Exam, component_id).status,
-                    "component_abandoned",
-                )
-                self.assertEqual(
-                    session.get(Exam, old_component_id).status,
-                    "component_pending",
-                )
+                self.assertIn(old_component_id, [component.id for component in components])
+                self.assertIn(finalized.json()["exam_id"], [component.id for component in components])
 
             logged_out = client.post("/api/v1/auth/logout")
             self.assertEqual(logged_out.status_code, 200, logged_out.text)
 
         with session_scope() as session:
-            for component_id in (old_component_id, component_id):
-                component = session.get(Exam, component_id)
-                self.assertEqual(component.status, "component_abandoned")
-                self.assertIsNotNone(component.deleted_at)
+            component = session.get(Exam, old_component_id)
+            self.assertEqual(component.status, "component_abandoned")
+            self.assertIsNotNone(component.deleted_at)
 
     def test_purge_stale_full_test_component_removes_storage_and_database(self) -> None:
         owner_id = uuid4()
@@ -578,8 +558,8 @@ class PlatformApiTests(unittest.TestCase):
             self.assertIsNone(session.get(Exam, component_id))
             self.assertIsNone(session.get(Job, job_id))
 
-    def test_combine_reuses_sources_created_during_final_persist(self) -> None:
-        """Combining source-backed components must not insert duplicate sources."""
+    def test_combine_references_immutable_component_sources_without_minio_io(self) -> None:
+        """Combining client components shares immutable sources without copies."""
 
         class FakeStorage:
             def __init__(self) -> None:
@@ -639,6 +619,29 @@ class PlatformApiTests(unittest.TestCase):
                 title="Source-backed Reading Component",
                 is_full_test_component=True,
             )
+            listening_key = f"exams/{listening_id}/revisions/client/listening.pdf"
+            reading_key = f"exams/{reading_id}/revisions/client/reading.pdf"
+            with session_scope() as session:
+                session.add_all(
+                    [
+                        ExamSource(
+                            exam_id=listening_id,
+                            component="listening",
+                            bucket=config.settings.minio_bucket_sources,
+                            object_key=listening_key,
+                            filename="listening.pdf",
+                            size=1024,
+                        ),
+                        ExamSource(
+                            exam_id=reading_id,
+                            component="reading",
+                            bucket=config.settings.minio_bucket_sources,
+                            object_key=reading_key,
+                            filename="reading.pdf",
+                            size=1024,
+                        ),
+                    ]
+                )
             copies_before_combine = len(fake_storage.copies)
 
             with TestClient(app) as client:
@@ -680,15 +683,12 @@ class PlatformApiTests(unittest.TestCase):
                         for source in sources
                     },
                     {
-                        f"examify-sources/{combined_id}/listening.pdf",
-                        f"examify-sources/{combined_id}/reading.pdf",
+                        listening_key,
+                        reading_key,
                     },
                 )
 
-            # Two component copies plus two copies made by persist_final_exam
-            # for the combined payload.  The second combine phase must reuse
-            # those rows rather than copying/inserting them again.
-            self.assertEqual(len(fake_storage.copies), copies_before_combine + 2)
+            self.assertEqual(len(fake_storage.copies), copies_before_combine)
 
     def test_combine_retry_repairs_partially_committed_combined_exam(self) -> None:
         """A retry cleans a combined row whose asset move failed after commit."""

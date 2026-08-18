@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 
 import AudioUpload, { MAX_AUDIO_BYTES } from "@/components/AudioUpload";
-import AudioProcessingDialog from "@/components/AudioProcessingDialog";
 import Header from "@/components/Header";
 import UploadZone, { MAX_UPLOAD_BYTES } from "@/components/UploadZone";
 import Segmented from "@/components/Segmented";
@@ -25,7 +24,7 @@ import {
   getDesktopExamQuota,
   isDesktop,
 } from "@/lib/api";
-import type { ExamDraft, ExamType } from "@/lib/utils";
+import type { ExamType } from "@/lib/utils";
 
 type AudioMode = "full" | "question_groups";
 type AudioGroupDraft = { id: string; range: string; file: File | null };
@@ -78,16 +77,10 @@ export default function HomePage() {
   const [cancelingPending, setCancelingPending] = useState(false);
   const [progress, setProgress] = useState(0);
   const [stage, setStage] = useState("");
-  const [processingPhase, setProcessingPhase] = useState<ExamDraft["processing_phase"]>(
-    "queued",
-  );
-  const [phaseProgress, setPhaseProgress] = useState(0);
-  const [audioProgress, setAudioProgress] = useState(0);
   const [ocrProgress, setOcrProgress] = useState(0);
-  const [audioStage, setAudioStage] = useState("");
   const [ocrStage, setOcrStage] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [noCache, setNoCache] = useState(true);
+  const [noCache, setNoCache] = useState(false);
   const [hasPendingListening, setHasPendingListening] = useState(false);
   const cancelled = useRef(false);
 
@@ -324,46 +317,6 @@ export default function HomePage() {
     return Number.isFinite(parsed) ? Math.min(100, Math.max(1, parsed)) : 10;
   })();
 
-  async function pollJob(jobId: string) {
-    let attempts = 0;
-    const maxAttempts = 400;
-    while (!cancelled.current && attempts < maxAttempts) {
-      attempts += 1;
-      const response = await apiFetch(`/api/extractions/${jobId}`, {
-        cache: "no-store",
-      });
-      if (!response.ok) {
-        const payload = await response.json().catch(() => ({}));
-        throw new Error(payload.detail || "Không đọc được trạng thái xử lý");
-      }
-      const draft = (await response.json()) as ExamDraft;
-      setProgress(draft.progress);
-      setStage(draft.stage);
-      setProcessingPhase(draft.processing_phase || "queued");
-      setPhaseProgress(draft.phase_progress ?? 0);
-      setAudioProgress(draft.audio_progress ?? 0);
-      setOcrProgress(draft.ocr_progress ?? 0);
-      setAudioStage(draft.audio_stage || "");
-      setOcrStage(draft.ocr_stage || "");
-      if (draft.status === "failed") {
-        throw new Error(draft.error || "Xử lý tài liệu thất bại");
-      }
-      if (draft.status === "review" || draft.status === "ready") {
-        sessionStorage.setItem("extraction-job", jobId);
-        sessionStorage.setItem(
-          "quiz-preferences",
-          JSON.stringify({ count: requestedCount, shuffle: false }),
-        );
-        router.push(`/review?job=${jobId}`);
-        return;
-      }
-      await new Promise((resolve) => window.setTimeout(resolve, 1200));
-    }
-    if (attempts >= maxAttempts) {
-      throw new Error("Quá thời gian xử lý tài liệu (8 phút). Hãy kiểm tra file PDF hoặc khởi động lại ứng dụng.");
-    }
-  }
-
   async function handleSubmit() {
     if (!file) {
       setError("Vui lòng chọn file PDF.");
@@ -451,136 +404,146 @@ export default function HomePage() {
       }
     }
     setError(null);
-    if (isDesktop()) {
-      try {
-        const readiness = await apiFetch("/health/ready", { cache: "no-store" });
-        const status = await readiness.json().catch(() => ({}));
-        if (!readiness.ok || !status.ocr_ready) {
-          setError(
-            "Thành phần OCR của ứng dụng chưa sẵn sàng. Hãy cài lại bản Examify Desktop mới nhất.",
-          );
-          return;
-        }
-      } catch {
-        setError("Không thể kết nối bộ OCR cục bộ. Hãy khởi động lại hoặc cài lại Examify Desktop.");
-        return;
-      }
-    }
     setLoading(true);
     setProgress(0);
-    setProcessingPhase("queued");
-    setPhaseProgress(0);
-    setAudioProgress(0);
     setOcrProgress(0);
-    setAudioStage("");
     setOcrStage("");
-    setStage("Đang tải PDF...");
+    setStage("Đang chuẩn bị file để tải lên server...");
     cancelled.current = false;
 
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("exam_type", examType);
-    if (noCache) {
-      formData.append("no_cache", "true");
-    }
-    formData.append(
-      "audio_mode",
-      examType !== "listening" ? "none" : audioMode,
-    );
-    if (requestedCount !== null) {
-      formData.append("requested_count", String(requestedCount));
-    }
-    if (examType === "listening") {
-      if (audioMode === "full" && fullAudioFile) {
-        formData.append("audio_full", fullAudioFile);
+    try {
+      // OCR is deliberately server-side again. The browser only streams the
+      // PDF/audio uploads and polls a durable job; this avoids Tesseract.js /
+      // WASM startup failures and slow single-threaded Chrome OCR.
+      const form = new FormData();
+      form.append("file", file, file.name);
+      form.append("exam_type", examType);
+      form.append(
+        "audio_mode",
+        examType === "listening" ? audioMode : "none",
+      );
+      if (requestedCount != null) form.append("requested_count", String(requestedCount));
+      if (noCache) form.append("no_cache", "true");
+
+      if (examType === "listening" && audioMode === "full" && fullAudioFile) {
+        form.append("audio_full", fullAudioFile, fullAudioFile.name);
       }
-      if (audioMode === "question_groups") {
+
+      if (examType === "listening" && audioMode === "question_groups") {
+        const upperQuestion = requestedCount == null ? 100 : requestedCount;
         const manifest: Array<{
           id: string;
           scope: "question" | "group";
           question_numbers: number[];
           file_index: number;
         }> = [];
-        let fileIndex = 0;
-        for (const number of QUESTION_AUDIO_NUMBERS) {
-          const audio = questionAudioFiles[number];
-          if (!audio) continue;
-          formData.append("audio_files", audio);
+        const uploads: File[] = [];
+        const appendAudio = (
+          id: string,
+          scope: "question" | "group",
+          numbers: number[],
+          audioFile: File,
+        ) => {
+          const fileIndex = uploads.length;
+          uploads.push(audioFile);
           manifest.push({
-            id: `question-${number}`,
-            scope: "question",
-            question_numbers: [number],
+            id,
+            scope,
+            question_numbers: numbers,
             file_index: fileIndex,
           });
-          fileIndex += 1;
+        };
+
+        for (const number of QUESTION_AUDIO_NUMBERS) {
+          const audioFile = questionAudioFiles[number];
+          if (audioFile && number <= upperQuestion) {
+            appendAudio(`question-${number}`, "question", [number], audioFile);
+          }
         }
         for (const group of audioGroups) {
           const range = parseAudioRange(group.range);
-          if (!range || !group.file) continue;
-          formData.append("audio_files", group.file);
-          manifest.push({
-            id: group.id,
-            scope: "group",
-            question_numbers: Array.from(
-              { length: range[1] - range[0] + 1 },
-              (_, index) => range[0] + index,
-            ),
-            file_index: fileIndex,
-          });
-          fileIndex += 1;
+          // A server manifest must contain a complete TOEIC group. It is
+          // valid for a requested count to end in the middle of a group, so
+          // retain the complete selected group instead of sending 50–51.
+          if (range && group.file && range[0] <= upperQuestion) {
+            appendAudio(
+              group.id,
+              "group",
+              Array.from({ length: range[1] - range[0] + 1 }, (_, index) => range[0] + index),
+              group.file,
+            );
+          }
         }
-        formData.append("audio_manifest", JSON.stringify(manifest));
+        manifest.forEach((entry, index) => {
+          form.append("audio_files", uploads[index], uploads[index].name);
+        });
+        form.append("audio_manifest", JSON.stringify(manifest));
       }
-    }
 
-    try {
-      const response = await apiFetch("/api/extractions", {
+      setStage("Đang tải file lên server Tesseract…");
+      setOcrStage("Đang chờ worker OCR server");
+      const created = await apiFetch("/api/extractions", {
         method: "POST",
-        body: formData,
+        body: form,
+        cache: "no-store",
       });
-      const responseText = await response.text();
-      let payload: {
-        detail?: string;
+      const createdPayload = (await created.json().catch(() => ({}))) as {
         job_id?: string;
-        processing_location?: string;
-      } = {};
-      try {
-        payload = responseText ? JSON.parse(responseText) : {};
-      } catch {
-        payload = {};
+        detail?: string | { message?: string };
+      };
+      if (!created.ok || !createdPayload.job_id) {
+        const detail =
+          typeof createdPayload.detail === "string"
+            ? createdPayload.detail
+            : createdPayload.detail?.message;
+        throw new Error(detail || "Không thể tạo job OCR trên server.");
       }
-      if (!response.ok) {
-        const fallback =
-          response.status === 413
-            ? "File vượt quá giới hạn 50 MB."
-            : response.status === 507
-              ? "Máy chủ tạm hết dung lượng xử lý upload. Vui lòng đợi ít phút rồi thử lại."
-              : response.status === 503
-                ? "Máy chủ đang xử lý nhiều lượt tải lên. Vui lòng đợi ít phút rồi thử lại."
-                : response.status === 429
-                  ? "Bạn thao tác tải lên quá nhanh. Vui lòng đợi rồi thử lại."
-            : response.status >= 500
-              ? "Máy chủ hoặc proxy đang gián đoạn. Hãy kiểm tra backend rồi thử lại."
-              : `Không thể tải PDF lên (HTTP ${response.status}).`;
-        throw new Error(payload.detail || fallback);
-      }
-      if (!payload.job_id) {
-        throw new Error("Máy chủ không trả về mã xử lý.");
-      }
-      console.info(
-        `[OCR_ROUTE] backend_confirmed=${
-          payload.processing_location || (isDesktop() ? "LOCAL_EDGE" : "REMOTE_SERVER")
-        } job=${payload.job_id}`,
+
+      const jobId = createdPayload.job_id;
+      sessionStorage.setItem("extraction-job", jobId);
+      sessionStorage.removeItem("client-ocr-draft");
+      sessionStorage.setItem(
+        "quiz-preferences",
+        JSON.stringify({ count: requestedCount, shuffle: false }),
       );
-      await pollJob(payload.job_id);
-    } catch (err) {
-      const message =
-        err instanceof TypeError
-          ? "Không kết nối được tới máy chủ. Hãy kiểm tra backend."
-          : err instanceof Error
-            ? err.message
-            : "Có lỗi xảy ra";
-      setError(message);
+
+      const deadline = Date.now() + 20 * 60 * 1000;
+      while (Date.now() < deadline) {
+        const response = await apiFetch(
+          `/api/extractions/${encodeURIComponent(jobId)}`,
+          { cache: "no-store" },
+        );
+        const state = (await response.json().catch(() => ({}))) as {
+          status?: string;
+          progress?: number;
+          ocr_progress?: number;
+          stage?: string;
+          ocr_stage?: string;
+          error?: string | null;
+          detail?: string;
+        };
+        if (!response.ok) throw new Error(state.detail || "Không đọc được tiến độ OCR server.");
+        const nextProgress = Math.max(0, Math.min(100, Number(state.progress) || 0));
+        const nextOcrProgress = Math.max(
+          0,
+          Math.min(100, Number(state.ocr_progress ?? nextProgress) || 0),
+        );
+        setProgress(nextProgress);
+        setOcrProgress(nextOcrProgress);
+        setStage(state.stage || "Đang xử lý trên server…");
+        setOcrStage(state.ocr_stage || state.stage || "Đang OCR bằng Tesseract…");
+        if (state.status === "failed") {
+          throw new Error(state.error || "OCR server thất bại.");
+        }
+        if (state.status === "review" || state.status === "ready") {
+          router.push(`/review?job=${encodeURIComponent(jobId)}`);
+          return;
+        }
+        await new Promise((resolve) => window.setTimeout(resolve, 1000));
+      }
+      throw new Error("OCR server xử lý quá thời gian chờ 20 phút.");
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "OCR server thất bại");
       setLoading(false);
     }
   }
@@ -588,19 +551,6 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-slate-50">
       <Header />
-      {loading &&
-        (processingPhase === "audio" || processingPhase === "audio_ocr") && (
-        <AudioProcessingDialog
-          mode={audioMode}
-          progress={phaseProgress}
-          stage={stage}
-          parallel={processingPhase === "audio_ocr"}
-          audioProgress={audioProgress}
-          ocrProgress={ocrProgress}
-          audioStage={audioStage}
-          ocrStage={ocrStage}
-        />
-      )}
       <div className="mx-auto grid max-w-[1440px] gap-7 px-5 py-8 sm:px-8 lg:grid-cols-[minmax(0,1fr)_360px]">
         <section className="ui-card p-6 sm:p-8 lg:p-10">
           <div className="flex items-start gap-3 border-b border-slate-200 pb-5">
@@ -710,7 +660,7 @@ export default function HomePage() {
                   className="h-4 w-4 rounded border-slate-300 text-[#1f4e79] focus:ring-[#1f4e79]"
                 />
                 <label htmlFor="no_cache" className="cursor-pointer font-medium select-none text-slate-700">
-                  Quét mới từ đầu (Bỏ qua cache bài làm cũ)
+                  Bắt đầu lại, không dùng bản OCR server đã cache
                 </label>
               </div>
               {examType === "listening" && (
@@ -944,7 +894,7 @@ export default function HomePage() {
                     </p>
                     <p className="mt-0.5 text-xs leading-5 text-slate-500">
                       {index === 0
-                        ? "PDF scan được xử lý trực tiếp trên hệ thống."
+                        ? "PDF scan được OCR bằng Tesseract trên server và có tiến độ xử lý."
                         : index === 1
                           ? "Có thể sửa crop và import answer key từ ảnh."
                           : "Listening phát audio trực tiếp trong màn thi."}

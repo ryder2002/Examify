@@ -6,9 +6,7 @@ x-logging: &default-logging
     max-size: "10m"
     max-file: "5"
 
-# Every backend role must run the exact same artifact.  Giving each service a
-# separate implicit Compose image allowed ``api`` to be rebuilt while the OCR
-# worker kept an older filesystem and failed only after accepting a job.
+# Every backend role must run the exact same artifact.
 x-backend-image: &backend-image
   image: ${BACKEND_IMAGE:-examify-backend:local}
   build:
@@ -79,7 +77,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 24
-    mem_limit: 5g
+    mem_limit: 3584m
     cpus: "2.0"
     security_opt: [no-new-privileges:true]
     networks: [internal]
@@ -101,7 +99,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 24
-    mem_limit: 1g
+    mem_limit: 768m
     cpus: "0.75"
     security_opt: [no-new-privileges:true]
     networks: [internal]
@@ -110,12 +108,12 @@ services:
   redis:
     image: redis:7.4.10-alpine
     restart: unless-stopped
-    command: ["redis-server", "--appendonly", "yes", "--appendfsync", "everysec", "--maxmemory", "384mb", "--maxmemory-policy", "noeviction", "--requirepass", "${REDIS_PASSWORD:?Set REDIS_PASSWORD in .env}"]
+    command: ["redis-server", "--appendonly", "yes", "--appendfsync", "everysec", "--maxmemory", "256mb", "--maxmemory-policy", "noeviction", "--requirepass", "${REDIS_PASSWORD:?Set REDIS_PASSWORD in .env}"]
     volumes:
       - redis_data:/data
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
-    mem_limit: 512m
+    mem_limit: 384m
     cpus: "0.5"
     logging: *default-logging
     healthcheck:
@@ -175,23 +173,7 @@ services:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}
       AUTH_REQUIRED: "true"
       USE_CELERY: "true"
-      OCR_ENABLED: ${OCR_ENABLED:-true}
-      TESSERACT_LANG: ${TESSERACT_LANG:-eng}
-      TESSERACT_DATA_DIR: ${TESSERACT_DATA_DIR:-}
-      TESSERACT_TIMEOUT_SECONDS: ${TESSERACT_TIMEOUT_SECONDS:-90}
-      OCR_ENGINE_POOL_SIZE: ${OCR_ENGINE_POOL_SIZE:-2}
-      OMP_THREAD_LIMIT: ${OMP_THREAD_LIMIT:-2}
-      OMP_NUM_THREADS: ${OMP_NUM_THREADS:-2}
-      OCR_LISTENING_PAGE_SCALE: ${OCR_LISTENING_PAGE_SCALE:-1.0}
-      OCR_READING_PAGE_SCALE: ${OCR_READING_PAGE_SCALE:-0.75}
       MAX_PDF_PAGES: ${MAX_PDF_PAGES:-500}
-      # The full two-stage Reading ROI pipeline is opt-in until it has been
-      # benchmarked on the production CPU.  The default path still performs
-      # bounded ROI recovery only for pages with incomplete OCR.
-      OCR_READING_ROI_ENABLED: ${OCR_READING_ROI_ENABLED:-0}
-      OCR_READING_LOCATOR_DPI: ${OCR_READING_LOCATOR_DPI:-150}
-      OCR_READING_RECOVERY_PAGES: ${OCR_READING_RECOVERY_PAGES:-6}
-      OCR_SCAN_RETRY_PAGES: ${OCR_SCAN_RETRY_PAGES:-12}
       PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-https://exam.congnhat.online}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-https://exam.congnhat.online,https://www.exam.congnhat.online,http://localhost,http://127.0.0.1}
       TOOL_TAO_DE_WORK_DIR: /tmp/smart-exam
@@ -227,10 +209,6 @@ services:
       # same file into MinIO without creating a second copy.
       TMPDIR: /scratch
       TOOL_TAO_DE_WORK_DIR: /scratch/smart-exam
-      # API processes only need OCR for bounded answer-key operations; keep
-      # the larger Tesseract budget on the dedicated OCR worker.
-      OCR_ENGINE_POOL_SIZE: 1
-      OCR_PAGE_WORKERS: 1
       TOOL_TAO_DE_LOCAL_CACHE_MAX_BYTES: ${API_LOCAL_CACHE_MAX_BYTES:-2147483648}
       TOOL_TAO_DE_CACHE_EVICT_MIN_AGE_SECONDS: ${API_CACHE_EVICT_MIN_AGE_SECONDS:-900}
       # Keep 5 GiB free so three maximum-size teacher uploads plus temporary
@@ -259,48 +237,45 @@ services:
       - /tmp:size=1G,mode=1777
     security_opt: [no-new-privileges:true]
     cap_drop: [ALL]
-    mem_limit: 4g
-    cpus: "5.0"
+    mem_limit: 2g
+    cpus: "4.0"
     networks: [internal, egress]
     logging: *default-logging
 
   worker:
     <<: *backend-image
     restart: unless-stopped
-    # Tesseract runs in bounded subprocess slots. Page workers and OCR slots
-    # are explicitly capped so OCR cannot starve API/PostgreSQL on one host.
+    # OCR is server-side again. One bounded worker owns the queue while the
+    # pipeline caps page/Tesseract parallelism to avoid CPU/RAM oversubscription.
     command:
       - /bin/sh
       - -ec
       - >-
-        python -c 'import audio_processing, toeic_audio_cutter' &&
+        python -c 'import audio_processing, toeic_audio_cutter, pipeline, pytesseract, pdf2image, cv2' &&
         exec python -m celery -A celery_app.celery_app worker --pool=threads
         --concurrency=1 --loglevel=INFO --prefetch-multiplier=1 -Ofair
-        --queues=ocr,image --hostname=ocr@%h
+        --queues=ocr,media,documents --hostname=ocr-media@%h
     environment:
       <<: *backend-env
       DB_POOL_SIZE: 2
       DB_MAX_OVERFLOW: 0
-      OCR_PAGE_WORKERS: 4
-      OCR_ENGINE_POOL_SIZE: 2
-      OMP_THREAD_LIMIT: 2
-      OMP_NUM_THREADS: 2
-      # Audio Full clips are converted directly from the source with a small
-      # bounded FFmpeg pool. Three single-threaded encoders fit the worker's
-      # 5-vCPU budget without allowing 55 concurrent conversion processes.
-      AUDIO_CUT_WORKERS: ${AUDIO_CUT_WORKERS:-3}
+      AUDIO_CUT_WORKERS: 1
+      OCR_PAGE_WORKERS: ${OCR_PAGE_WORKERS:-2}
+      OCR_ENGINE_POOL_SIZE: ${OCR_ENGINE_POOL_SIZE:-2}
+      TESSERACT_TIMEOUT_SECONDS: ${TESSERACT_TIMEOUT_SECONDS:-120}
+      OMP_THREAD_LIMIT: 1
     depends_on:
       migrate:
         condition: service_completed_successfully
       redis:
         condition: service_healthy
     tmpfs:
-      - /tmp:size=4G,exec
+      - /tmp:size=1G,exec
     read_only: true
     security_opt: [no-new-privileges:true]
     cap_drop: [ALL]
-    mem_limit: 4g
-    cpus: "5.0"
+    mem_limit: 1536m
+    cpus: "2.0"
     networks: [internal, egress]
     logging: *default-logging
 
@@ -373,7 +348,7 @@ services:
       - /tmp:size=128m,mode=1777
     security_opt: [no-new-privileges:true]
     cap_drop: [ALL]
-    mem_limit: 1g
+    mem_limit: 600m
     cpus: "0.75"
     networks: [internal]
     logging: *default-logging

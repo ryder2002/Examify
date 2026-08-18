@@ -109,7 +109,7 @@ class ToeicAudioCutterTests(unittest.TestCase):
 
     def test_audio_cut_worker_count_is_bounded(self) -> None:
         with patch.dict(os.environ, {"AUDIO_CUT_WORKERS": "99"}):
-            self.assertEqual(_cut_workers(55), 3)
+            self.assertEqual(_cut_workers(55), 6)
         with patch.dict(os.environ, {"AUDIO_CUT_WORKERS": "0"}):
             self.assertEqual(_cut_workers(55), 1)
 

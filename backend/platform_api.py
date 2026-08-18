@@ -10,6 +10,7 @@ import copy
 import json
 import threading
 import uuid
+from contextlib import nullcontext
 from datetime import datetime, timedelta, timezone
 from io import BytesIO
 from typing import Any, Literal
@@ -22,7 +23,7 @@ from bleach.css_sanitizer import CSSSanitizer
 from fastapi import APIRouter, HTTPException, Query, Request, Response
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field, field_validator
-from sqlalchemy import delete, func, or_, select, update
+from sqlalchemy import and_, delete, func, or_, select, update
 from sqlalchemy.exc import IntegrityError
 
 from attempt_answers import (
@@ -58,6 +59,7 @@ from auth_service import (
 from config import settings
 from database import session_scope
 from identity_cache import identity_cache
+from pagination import decode_submitted_cursor, encode_submitted_cursor
 from object_storage import storage
 from exam_solutions import (
     SolutionValidationError,
@@ -350,11 +352,14 @@ def persist_final_exam(
     base_revision: int | None = None,
     defer_version_snapshot: bool = False,
     is_full_test_component: bool = False,
+    db_session: Any | None = None,
 ) -> str | None:
     """Persist a finalized payload and its normalized searchable rows."""
     if not owner_user_id:
         return None
-    with session_scope() as session:
+    # Client extraction passes its locked session so session state, exam rows,
+    # source reference and commit marker become one atomic transaction.
+    with (nullcontext(db_session) if db_session is not None else session_scope()) as session:
         actor = session.get(User, owner_user_id)
         if actor is None:
             raise HTTPException(status_code=404, detail="Không tìm thấy người dùng")
@@ -602,79 +607,103 @@ def persist_final_exam(
         if not is_new_exam:
             exam.content_revision = max(1, exam.content_revision or 1) + 1
         exam.updated_at = utcnow()
-        for item in questions:
-            session.add(
-                QuestionRecord(
-                    exam_id=exam.id,
-                    number=int(item["number"]),
-                    part=str(item.get("part", "")),
-                    text=str(item.get("text", "")),
-                    options=item.get("options") or {},
-                    option_letters=item.get("option_letters") or [],
-                    correct=item.get("correct"),
-                    group_id=item.get("group_id"),
-                    stimulus_id=item.get("stimulus_id"),
-                    confidence=float(item.get("confidence", 100)),
-                    issues=item.get("issues") or [],
-                )
-            )
+        question_rows = [
+            {
+                "id": uuid4(),
+                "exam_id": exam.id,
+                "number": int(item["number"]),
+                "part": str(item.get("part", "")),
+                "text": str(item.get("text", "")),
+                "options": item.get("options") or {},
+                "option_letters": item.get("option_letters") or [],
+                "correct": item.get("correct"),
+                "group_id": item.get("group_id"),
+                "stimulus_id": item.get("stimulus_id"),
+                "confidence": float(item.get("confidence", 100)),
+                "issues": item.get("issues") or [],
+            }
+            for item in questions
+        ]
+        if question_rows:
+            session.execute(QuestionRecord.__table__.insert(), question_rows)
+
+        stimulus_rows: list[dict[str, Any]] = []
+        asset_rows: list[dict[str, Any]] = []
         for item in payload.get("stimuli") or []:
-            stimulus_row = StimulusRecord(
-                    exam_id=exam.id,
-                    source_id=str(item["id"]),
-                    title=str(item.get("title", "")),
-                    kind=str(item.get("kind", "image")),
-                    question_numbers=item.get("question_numbers") or [],
-                    page_numbers=item.get("page_numbers") or [],
-                    confidence=float(item.get("confidence", 100)),
-                    issues=item.get("issues") or [],
-                )
-            session.add(stimulus_row)
-            session.flush()
+            stimulus_row_id = uuid4()
+            stimulus_rows.append(
+                {
+                    "id": stimulus_row_id,
+                    "exam_id": exam.id,
+                    "source_id": str(item["id"]),
+                    "title": str(item.get("title", "")),
+                    "kind": str(item.get("kind", "image")),
+                    "question_numbers": item.get("question_numbers") or [],
+                    "page_numbers": item.get("page_numbers") or [],
+                    "confidence": float(item.get("confidence", 100)),
+                    "issues": item.get("issues") or [],
+                }
+            )
             for order, asset in enumerate(item.get("assets") or []):
                 asset_id = str(asset.get("id", ""))
                 asset_job_id = _asset_job_id(job_id, asset.get("url"))
-                session.add(
-                    Asset(
-                        exam_id=exam.id,
-                        stimulus_id=stimulus_row.id,
-                        kind="stimulus",
-                        bucket="examify-assets",
-                        object_key=(
+                asset_rows.append(
+                    {
+                        "id": uuid4(),
+                        "exam_id": exam.id,
+                        "stimulus_id": stimulus_row_id,
+                        "kind": "stimulus",
+                        "bucket": settings.minio_bucket_assets,
+                        "object_key": (
                             f"jobs/{asset_job_id}/assets/{asset_id}"
                             if asset_job_id
-                            else asset.get("url", "")
+                            else str(asset.get("url", ""))
                         ),
-                        filename=asset_id,
-                        content_type="image/webp",
-                        size=0,
-                        page_number=asset.get("page"),
-                        bbox=asset.get("bbox"),
-                        display_order=order,
-                    )
+                        "filename": asset_id,
+                        "content_type": str(asset.get("content_type") or "image/webp"),
+                        "size": int(asset.get("size") or 0),
+                        "sha256": asset.get("sha256"),
+                        "page_number": asset.get("page"),
+                        "bbox": asset.get("bbox"),
+                        "display_order": order,
+                        "created_at": utcnow(),
+                    }
                 )
+        if stimulus_rows:
+            session.execute(StimulusRecord.__table__.insert(), stimulus_rows)
+        if asset_rows:
+            session.execute(Asset.__table__.insert(), asset_rows)
         audios_list = list(payload.get("audios") or [])
         if payload.get("audio") and not any(a.get("id") == payload["audio"].get("id") for a in audios_list):
             audios_list.append(payload["audio"])
+        audio_rows: list[dict[str, Any]] = []
         for order, audio in enumerate(audios_list):
             audio_id = str(audio.get("id", ""))
             audio_job_id = _asset_job_id(job_id, audio.get("url"))
-            session.add(
-                Asset(
-                    exam_id=exam.id,
-                    kind="audio",
-                    bucket="examify-audio",
-                    object_key=(
+            audio_rows.append(
+                {
+                    "id": uuid4(),
+                    "exam_id": exam.id,
+                    "stimulus_id": None,
+                    "kind": "audio",
+                    "bucket": settings.minio_bucket_audio,
+                    "object_key": (
                         f"jobs/{audio_job_id}/audio/{audio_id}"
                         if audio_job_id
-                        else audio.get("url", "")
+                        else str(audio.get("url", ""))
                     ),
-                    filename=audio_id or str(audio.get("filename") or ""),
-                    content_type=str(audio.get("content_type") or "audio/mpeg"),
-                    size=int(audio.get("size") or 0),
-                    display_order=order,
-                )
+                    "filename": audio_id or str(audio.get("filename") or ""),
+                    "content_type": str(audio.get("content_type") or "audio/mpeg"),
+                    "size": int(audio.get("size") or 0),
+                    "sha256": audio.get("sha256"),
+                    "page_number": None,
+                    "bbox": None,
+                    "display_order": order,
+                    "created_at": utcnow(),
+                }
             )
+        if audio_rows:
+            session.execute(Asset.__table__.insert(), audio_rows)
         answers = {
             str(item["number"]): item["correct"]
             for item in questions
@@ -694,52 +723,9 @@ def persist_final_exam(
 
             version = _snapshot_exam(session, exam, owner_user_id)
             exam.current_version_id = version.id
-        if storage is not None:
-            component_jobs = dict(payload.get("component_job_ids") or {})
-            if not component_jobs and job_id and re.fullmatch(
-                r"[0-9a-fA-F-]{36}", job_id
-            ):
-                component_jobs = {
-                    str(payload.get("exam_type") or "main"): job_id
-                }
-            for component, source_job_id in component_jobs.items():
-                if not re.fullmatch(r"[0-9a-fA-F-]{36}", str(source_job_id)):
-                    continue
-                destination = f"examify-sources/{exam.id}/{component}.pdf"
-                source_key = f"jobs/{source_job_id}/input.pdf"
-                try:
-                    storage.copy_object(
-                        settings.minio_bucket_sources, source_key, destination
-                    )
-                    source_stat = storage.client.stat_object(
-                        settings.minio_bucket_sources, destination
-                    )
-                except Exception:
-                    logger.warning(
-                        "EXAM_SOURCE_COPY_FAILED exam_id=%s component=%s source_job=%s",
-                        exam.id,
-                        component,
-                        source_job_id,
-                        exc_info=True,
-                    )
-                    continue
-                source = session.scalar(
-                    select(ExamSource).where(
-                        ExamSource.exam_id == exam.id,
-                        ExamSource.component == component,
-                    )
-                )
-                if source is None:
-                    source = ExamSource(
-                        exam_id=exam.id,
-                        component=component,
-                        bucket=settings.minio_bucket_sources,
-                        object_key=destination,
-                        filename=f"{component}.pdf",
-                    )
-                    session.add(source)
-                source.object_key = destination
-                source.size = int(source_stat.size or 0)
+        # Source objects are registered by the client-extraction commit after
+        # they have been stat'ed and PDF-validated. No network storage call is
+        # allowed inside this exam transaction.
         if exam.library_scope == "teacher_shared":
             payload_hash = hashlib.sha256(
                 json.dumps(
@@ -972,6 +958,46 @@ def _attempt_question_rows(
             select(QuestionRecord).where(QuestionRecord.exam_id == attempt.exam_id)
         ).all()
     ]
+
+
+def _attempt_delta_allowed_numbers(
+    session: Any,
+    attempt: Attempt,
+    raw_changes: dict[str, str | None],
+) -> set[int]:
+    """Validate autosave against only the <=50 question numbers in its delta."""
+
+    candidates: set[int] = set()
+    for raw_number in raw_changes:
+        try:
+            number = int(raw_number)
+        except (TypeError, ValueError):
+            continue
+        if str(number) == str(raw_number).strip() and 1 <= number <= 200:
+            candidates.add(number)
+    if not candidates:
+        return set()
+    if attempt.exam_version_id:
+        query = select(ExamVersionQuestion.question_number).where(
+            ExamVersionQuestion.exam_version_id == attempt.exam_version_id,
+            ExamVersionQuestion.question_number.in_(candidates),
+        )
+        if attempt.selected_part_numbers:
+            query = query.where(
+                ExamVersionQuestion.part_number.in_(
+                    [int(part) for part in attempt.selected_part_numbers]
+                )
+            )
+        return {int(number) for number in session.scalars(query)}
+    return {
+        int(number)
+        for number in session.scalars(
+            select(QuestionRecord.number).where(
+                QuestionRecord.exam_id == attempt.exam_id,
+                QuestionRecord.number.in_(candidates),
+            )
+        )
+    }
 
 
 def _can_manage_exam(exam: Exam, identity: dict[str, Any]) -> bool:
@@ -1883,38 +1909,23 @@ def combine_exams(body: CombineExamsRequest, request: Request) -> dict[str, Any]
                 )
                 if component_source is None:
                     continue
-                destination = f"examify-sources/{exam_id}/{component_name}.pdf"
                 source = session.scalar(
                     select(ExamSource).where(
                         ExamSource.exam_id == exam_id,
                         ExamSource.component == component_name,
                     )
                 )
-                # ``persist_final_exam`` has already copied component job
-                # sources for a combined payload and committed the destination
-                # ExamSource rows.  Re-adding the same (exam_id, component)
-                # here used to trigger uq_exam_source_component and return a
-                # 500 after the exam itself had already been persisted.  Reuse
-                # the row when it exists and only copy when the object has not
-                # already reached its final key.
-                if storage is not None and not (
-                    source is not None
-                    and source.bucket == settings.minio_bucket_sources
-                    and source.object_key == destination
-                ):
-                    storage.copy_object(
-                        component_source.bucket,
-                        component_source.object_key,
-                        destination,
-                    )
                 if source is None:
                     source = ExamSource(
                         exam_id=exam_id,
                         component=component_name,
                     )
                     session.add(source)
-                source.bucket = settings.minio_bucket_sources
-                source.object_key = destination
+                # Component source keys are immutable client-extraction keys;
+                # sharing the reference avoids MinIO copy/stat inside the DB
+                # transaction.
+                source.bucket = component_source.bucket
+                source.object_key = component_source.object_key
                 source.filename = f"{component_name}.pdf"
                 source.content_type = component_source.content_type
                 source.size = component_source.size
@@ -2153,10 +2164,11 @@ def attempt_history(
     request: Request,
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=50, ge=1, le=100),
+    cursor: str | None = Query(default=None, max_length=256),
 ) -> dict[str, Any]:
     # This static route must be registered before /attempts/{attempt_id};
     # otherwise Starlette treats the literal word "history" as an attempt ID.
-    return _attempt_history_page(request, page, page_size)
+    return _attempt_history_page(request, page, page_size, cursor)
 
 
 @router.get("/attempts/{attempt_id}")
@@ -2291,7 +2303,10 @@ def save_attempt_answers(
                 "status": attempt.status,
                 "accepted_revision": attempt.answer_revision,
             }
-        allowed_numbers = {number for number, _part, _correct in _attempt_question_rows(session, attempt)}
+        allowed_numbers = {
+            number
+            for number, _part, _correct in _attempt_question_rows(session, attempt)
+        }
         _store_personal_answers(session, attempt, body, allowed_numbers)
         return {
             "ok": True,
@@ -2338,7 +2353,9 @@ def sync_attempt(
                 "status": attempt.status,
                 "receipt_id": attempt.submit_receipt_id,
             }
-        allowed_numbers = {number for number, _part, _correct in _attempt_question_rows(session, attempt)}
+        allowed_numbers = _attempt_delta_allowed_numbers(
+            session, attempt, body.changes
+        )
         try:
             result = sync_attempt_changes(
                 session,
@@ -2490,6 +2507,7 @@ def _attempt_history_page(
     request: Request,
     page: int,
     page_size: int,
+    cursor: str | None = None,
 ) -> dict[str, Any]:
     identity = current_identity(request)
     with session_scope() as session:
@@ -2500,15 +2518,35 @@ def _attempt_history_page(
         total_attempts = int(
             session.scalar(select(func.count(Attempt.id)).where(*filters)) or 0
         )
-        rows = session.execute(
+        row_query = (
             select(Attempt, Exam, ExamVersion)
             .join(Exam, Exam.id == Attempt.exam_id)
             .outerjoin(ExamVersion, ExamVersion.id == Attempt.exam_version_id)
             .where(*filters)
-            .order_by(Attempt.submitted_at.desc())
-            .offset((page - 1) * page_size)
-            .limit(page_size)
+        )
+        if cursor:
+            try:
+                cursor_time, cursor_id = decode_submitted_cursor(cursor)
+            except ValueError as exc:
+                raise HTTPException(status_code=422, detail=str(exc)) from exc
+            row_query = row_query.where(
+                or_(
+                    Attempt.submitted_at < cursor_time,
+                    and_(
+                        Attempt.submitted_at == cursor_time,
+                        Attempt.id < cursor_id,
+                    ),
+                )
+            )
+        else:
+            row_query = row_query.offset((page - 1) * page_size)
+        fetched_rows = session.execute(
+            row_query
+            .order_by(Attempt.submitted_at.desc(), Attempt.id.desc())
+            .limit(page_size + 1)
         ).all()
+        has_more = len(fetched_rows) > page_size
+        rows = fetched_rows[:page_size]
 
         legacy_rows = [
             (attempt, exam, version)
@@ -2631,6 +2669,7 @@ def _attempt_history_page(
                     )
                 ),
             })
+        last_attempt = rows[-1][0] if rows else None
         return {
             "items": items,
             "total": total_attempts,
@@ -2638,6 +2677,12 @@ def _attempt_history_page(
             "page_size": page_size,
             "pages": max(
                 1, (total_attempts + page_size - 1) // page_size
+            ),
+            "has_more": has_more,
+            "next_cursor": (
+                encode_submitted_cursor(last_attempt.submitted_at, last_attempt.id)
+                if has_more and last_attempt and last_attempt.submitted_at
+                else None
             ),
         }
 
@@ -2652,6 +2697,54 @@ def _expire_available_tokens(session: Any) -> None:
         )
         .values(status="expired")
     )
+
+
+def _token_owner_device_maps(
+    session: Any,
+    tokens: list[ActivationToken],
+) -> tuple[dict[str, User], dict[str, int]]:
+    """Load owner fields and active device counts in two bounded queries."""
+
+    owner_ids = {token.owner_user_id for token in tokens if token.owner_user_id}
+    owners = {
+        owner.id: owner
+        for owner in (
+            session.scalars(select(User).where(User.id.in_(owner_ids))).all()
+            if owner_ids
+            else []
+        )
+    }
+    token_ids = {token.id for token in tokens}
+    redeemed_ids = {
+        token.redeemed_by_device_id
+        for token in tokens
+        if token.redeemed_by_device_id
+    }
+    device_rows = (
+        session.execute(
+            select(Device.id, Device.activation_token_id).where(
+                Device.revoked_at.is_(None),
+                or_(
+                    Device.activation_token_id.in_(token_ids),
+                    Device.id.in_(redeemed_ids),
+                ),
+            )
+        ).all()
+        if token_ids
+        else []
+    )
+    linked_counts: dict[str, int] = {}
+    active_device_ids: set[str] = set()
+    for device_id, activation_token_id in device_rows:
+        active_device_ids.add(device_id)
+        if activation_token_id:
+            linked_counts[activation_token_id] = linked_counts.get(activation_token_id, 0) + 1
+    counts = {
+        token.id: linked_counts.get(token.id, 0)
+        or (1 if token.redeemed_by_device_id in active_device_ids else 0)
+        for token in tokens
+    }
+    return owners, counts
 
 
 @router.get("/admin/dashboard")
@@ -2948,6 +3041,7 @@ def export_token_group(group_id: str, request: Request) -> StreamingResponse:
             .where(ActivationToken.group_id == group.id)
             .order_by(ActivationToken.created_at)
         ).all()
+        owners, device_counts = _token_owner_device_maps(session, tokens)
         status_labels = {
             "available": "Chưa dùng",
             "redeemed": "Đã kích hoạt",
@@ -2956,7 +3050,7 @@ def export_token_group(group_id: str, request: Request) -> StreamingResponse:
         }
         rows: list[dict[str, Any]] = []
         for token in tokens:
-            owner = session.get(User, token.owner_user_id) if token.owner_user_id else None
+            owner = owners.get(token.owner_user_id) if token.owner_user_id else None
             code: str | None = None
             note = ""
             if token.encrypted_code:
@@ -2981,13 +3075,7 @@ def export_token_group(group_id: str, request: Request) -> StreamingResponse:
                     "created_at": token.created_at.isoformat() if token.created_at else "",
                     "expires_at": token.expires_at.isoformat() if token.expires_at else "",
                     "redeemed_at": token.redeemed_at.isoformat() if token.redeemed_at else "",
-                    "device_count": session.scalar(
-                        select(func.count(Device.id)).where(
-                            Device.activation_token_id == token.id,
-                            Device.revoked_at.is_(None),
-                        )
-                    )
-                    or 0,
+                    "device_count": device_counts.get(token.id, 0),
                     "export_note": note,
                 }
             )
@@ -3138,6 +3226,7 @@ def list_tokens(
             .offset((safe_page - 1) * safe_page_size)
             .limit(safe_page_size)
         ).all()
+        owners, device_counts = _token_owner_device_maps(session, rows)
         return {
             "page": safe_page,
             "page_size": safe_page_size,
@@ -3157,44 +3246,24 @@ def list_tokens(
                     "device_id": row.redeemed_by_device_id,
                     "owner_user_id": row.owner_user_id,
                     "owner_name": (
-                        session.get(User, row.owner_user_id).display_name
-                        if row.owner_user_id and session.get(User, row.owner_user_id)
+                        owners[row.owner_user_id].display_name
+                        if row.owner_user_id in owners
                         else None
                     ),
                     "owner_email": (
-                        session.get(User, row.owner_user_id).email
-                        if row.owner_user_id and session.get(User, row.owner_user_id)
+                        owners[row.owner_user_id].email
+                        if row.owner_user_id in owners
                         else None
                     ),
                     "parent_token_id": row.parent_token_id,
                     "exam_count": (
-                        session.scalar(
-                            select(User.exam_created_count).where(
-                                User.id == row.owner_user_id
-                            )
-                        )
-                        if row.owner_user_id
+                        owners[row.owner_user_id].exam_created_count
+                        if row.owner_user_id in owners
                         else 0
                     ),
                     "exam_limit": row.exam_limit,
                     "max_devices": max(1, min(2, row.max_devices or 1)),
-                    "device_count": (
-                        session.scalar(
-                            select(func.count(Device.id)).where(
-                                Device.activation_token_id == row.id,
-                                Device.revoked_at.is_(None),
-                            )
-                        )
-                        or (
-                            session.scalar(
-                                select(func.count(Device.id)).where(
-                                    Device.id == row.redeemed_by_device_id,
-                                    Device.revoked_at.is_(None),
-                                )
-                            )
-                            or 0
-                        )
-                    ),
+                    "device_count": device_counts.get(row.id, 0),
                     "created_at": row.created_at,
                 }
                 for row in rows

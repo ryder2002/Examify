@@ -74,11 +74,13 @@ export default function DictionaryPanel({
     abortRef.current = controller;
     setLoading(true);
     setError(null);
+    const timeoutId = setTimeout(() => controller.abort("timeout"), 6000);
     try {
       const response = await apiFetch(
         `/api/v1/dictionary/lookup?q=${encodeURIComponent(normalized)}&source=${lookupSource}`,
         { cache: "no-store", signal: controller.signal },
       );
+      clearTimeout(timeoutId);
       const payload = (await response.json().catch(() => ({}))) as {
         detail?: string;
       } & Partial<DictionaryResult>;
@@ -87,16 +89,20 @@ export default function DictionaryPanel({
       }
       setResult(payload as DictionaryResult);
     } catch (reason) {
-      if (controller.signal.aborted) return;
+      clearTimeout(timeoutId);
+      if (controller.signal.aborted && controller.signal.reason !== "timeout") return;
       setError(
-        reason instanceof TypeError
+        controller.signal.reason === "timeout"
+          ? "Thời gian phản hồi quá lâu. Vui lòng thử lại."
+          : reason instanceof TypeError
           ? "Không thể kết nối dịch vụ từ điển. Hãy kiểm tra Internet."
           : reason instanceof Error && reason.message
           ? reason.message
           : "Không thể kết nối dịch vụ từ điển. Hãy kiểm tra Internet.",
       );
     } finally {
-      if (!controller.signal.aborted) setLoading(false);
+      clearTimeout(timeoutId);
+      if (!controller.signal.aborted || controller.signal.reason === "timeout") setLoading(false);
     }
   }, []);
 

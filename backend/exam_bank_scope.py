@@ -28,7 +28,9 @@ def teacher_scoped_title_key(
     return f"{owner_user_id}:{category_key}:{title_key}"
 
 
-def exam_bank_visibility_filters(identity: dict[str, Any]) -> list[Any]:
+def exam_bank_visibility_filters(
+    identity: dict[str, Any], exam_model: Any = Exam
+) -> list[Any]:
     """Return SQL filters for exams visible to one authenticated identity.
 
     A student receives a teacher's bank when they have an active membership in
@@ -40,7 +42,7 @@ def exam_bank_visibility_filters(identity: dict[str, Any]) -> list[Any]:
     if role == "admin":
         return []
     if role == "teacher":
-        return [Exam.owner_user_id == identity["user_id"]]
+        return [exam_model.owner_user_id == identity["user_id"]]
     if role == "student":
         teacher_membership = (
             select(ClassMember.id)
@@ -48,12 +50,12 @@ def exam_bank_visibility_filters(identity: dict[str, Any]) -> list[Any]:
             .where(
                 ClassMember.user_id == identity["user_id"],
                 ClassMember.status == "active",
-                Classroom.owner_teacher_id == Exam.owner_user_id,
+                Classroom.owner_teacher_id == exam_model.owner_user_id,
             )
-            .correlate(Exam)
+            .correlate(exam_model)
             .exists()
         )
         return [teacher_membership]
     # The caller validates roles before use, but a deny-all predicate avoids a
     # future role accidentally inheriting the entire shared bank.
-    return [Exam.id.is_(None)]
+    return [exam_model.id.is_(None)]

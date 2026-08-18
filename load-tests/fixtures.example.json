@@ -1,0 +1,32 @@
+{
+  "activeUsers": [
+    {
+      "accessToken": "student-access-jwt",
+      "deviceKey": "optional-bound-device-key",
+      "attemptId": "in-progress-attempt-uuid",
+      "submitAttemptId": "already-submitted-attempt-uuid",
+      "firstQuestion": 1,
+      "lastQuestion": 100,
+      "baseRevision": 0,
+      "submitAnswers": { "1": "A" }
+    }
+  ],
+  "autosaveUsers": [],
+  "submitUsers": [
+    {
+      "accessToken": "student-access-jwt",
+      "deviceKey": "optional-bound-device-key",
+      "attemptId": "unique-in-progress-attempt-uuid",
+      "baseRevision": 0,
+      "answers": { "1": "A" },
+      "timeLeftSeconds": 0
+    }
+  ],
+  "clientExtractionUsers": [
+    {
+      "accessToken": "teacher-access-jwt",
+      "deviceKey": "optional-bound-device-key"
+    }
+  ],
+  "mediaUrls": ["/api/v1/assets/example-audio-id"]
+}

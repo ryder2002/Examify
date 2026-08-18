@@ -189,8 +189,12 @@ def _normalize(text: str) -> str:
     )
     # Column/page fragments from a neighboring OCR region commonly appear as
     # standalone letters at the end, e.g. "repair T" or "forms. E S T".
-    # Limit removal to the observed TEST-fragment letters so legitimate
-    # answers ending in "Plan B" or "type A" remain untouched.
+    normalized = re.sub(
+        r"\s*\b(?:TEST[S50-9]*\s*\d*|Listening\s+test.*|GO\s+ON\s+TO\s+THE\s+NEXT\s+PAGE.*|Page\s+\d+.*)\s*$",
+        "",
+        normalized,
+        flags=re.IGNORECASE,
+    )
     return re.sub(r"(?:\s+[EST]){1,6}\s*$", "", normalized).rstrip()
 
 
@@ -228,17 +232,19 @@ def _extract_options(body: str) -> tuple[str, dict[str, str], str | None]:
     """Tách câu hỏi, các đáp án A-D, và đáp án đúng."""
     body = body.translate(CIRCLED_OPTION_MARKERS)
     # OCR can split a small option marker from its text and return
-    # ``B`` / ``evaluate`` as one visual row.  Once an explicit option marker
-    # has appeared, a line-start bare A-D token is unambiguously the next
-    # option marker in TOEIC layouts.
+    # ``B`` / ``evaluate`` as one visual row. Once an explicit option marker
+    # has appeared, a line-start bare B-D token is unambiguously the next option marker.
+    # Bare A is only converted if no option marker has been seen yet.
     seen_option = False
     normalized_lines: list[str] = []
     for line in body.splitlines():
         if OPTION_MARKER.match(line) or OCR_OPTION_MARKER.search(line):
             seen_option = True
         bare = re.match(r"^[ \t]*([A-Da-d])[ \t]+(.+?)\s*$", line)
-        if seen_option and bare:
-            line = f"({bare.group(1).upper()}) {bare.group(2)}"
+        if bare:
+            letter = bare.group(1).upper()
+            if not seen_option or letter != "A":
+                line = f"({letter}) {bare.group(2)}"
         normalized_lines.append(line)
     body = "\n".join(normalized_lines)
     # Tesseract may duplicate the first word of an option before the real

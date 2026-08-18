@@ -102,6 +102,43 @@ export default function SolutionEditor({
     setImporting(true);
     setImportError(null);
     try {
+      // A scanned PDF must never leave the browser. PDF.js/Tesseract.js
+      // returns normalized solution rows; the API only validates those rows
+      // and never receives the source PDF or OCR text from a server worker.
+      if (file.name.toLowerCase().endsWith(".pdf")) {
+        const { recognizeScannedSolutionPdf } = await import("@/lib/client-ocr");
+        const local = await recognizeScannedSolutionPdf(file, examType);
+        if (local) {
+          const validateResponse = await apiFetch("/api/v1/solution-imports/validate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ exam_type: examType, rows: local.entries }),
+          });
+          const validated = await validateResponse.json().catch(() => ({}));
+          if (!validateResponse.ok) {
+            throw new Error(
+              typeof validated.detail === "string"
+                ? validated.detail
+                : "Hàng lời giải OCR local không hợp lệ",
+            );
+          }
+          const entries = Array.isArray(validated.rows) ? validated.rows : local.entries;
+          const present = new Set(entries.map((entry: SolutionEntry) => entry.key));
+          setPreview({
+            entries,
+            issues: local.issues,
+            missing_keys: groups
+              .map((group) => group.key)
+              .filter((key) => !present.has(key)),
+            mode: "browser-tesseract",
+            ocr_confidence: local.confidence,
+          });
+          return;
+        }
+        // A text PDF is handled by the deterministic server parser. It sends
+        // only the document format that still needs table extraction; it does
+        // not invoke OCR and remains compatible with existing import previews.
+      }
       const formData = new FormData();
       formData.append("file", file);
       formData.append("exam_type", examType);
